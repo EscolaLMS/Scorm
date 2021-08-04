@@ -1,0 +1,34 @@
+{
+    "name": "escolalms/scorm",
+    "description": "Escola LMS SCORM management",
+    "type": "package",
+    "require": {
+        "php": ">=7.4",
+        "devianl2/laravel-scorm": "^2.0",
+        "laravel/framework": ">=8.0",
+        "escolalms/core": "^1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "orchestra/testbench": ">=5.0"
+    },
+    "license": "Apache-2.0",
+    "authors": [{
+        "name": "Mateusz Wojczal",
+        "email": "mateusz@escolasoft.pl"
+    }],
+    "autoload": {
+        "psr-4": {
+            "EscolaLms\\Scorm\\": "src",
+            "EscolaLms\\Scorm\\Database\\Seeders\\": "database/seeders",
+            "EscolaLms\\Scorm\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EscolaLms\\Scorm\\EscolaLmsScormServiceProvider"
+            ]
+        }
+    }
+}
