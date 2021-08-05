@@ -1,4 +1,5 @@
 <?php
+
 namespace EscolaLms\Scorm\Services;
 
 use App\Models\User;
@@ -22,6 +23,8 @@ use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 use Ramsey\Uuid\Uuid;
 use ZipArchive;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class ScormService implements ScormServiceContract
 {
@@ -34,8 +37,8 @@ class ScormService implements ScormServiceContract
      * @param string $filesDir
      * @param string $uploadDir
      */
-    public function __construct(
-    ) {
+    public function __construct()
+    {
         $this->scormLib = new ScormLib();
     }
 
@@ -210,18 +213,18 @@ class ScormService implements ScormServiceContract
         $zip = new \ZipArchive();
         $zip->open($file);
 
-        if (!config()->has('filesystems.disks.'.config('scorm.disk').'.root')) {
+        if (!config()->has('filesystems.disks.' . config('scorm.disk') . '.root')) {
             throw new StorageNotFoundException();
         }
 
-        $rootFolder =   config('filesystems.disks.'.config('scorm.disk').'.root');
+        $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root');
 
         if (substr($rootFolder, -1) != '/') {
             // If end with xxx/
-            $rootFolder =   config('filesystems.disks.'.config('scorm.disk').'.root').'/';
+            $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
         }
 
-        $destinationDir = $rootFolder.$hashName; // file path
+        $destinationDir = $rootFolder . $hashName; // file path
 
         if (!File::isDirectory($destinationDir)) {
             File::makeDirectory($destinationDir, 0755, true, true);
@@ -239,25 +242,25 @@ class ScormService implements ScormServiceContract
     private function generateScorm(UploadedFile $file)
     {
         $hashName = Uuid::uuid4();
-        $hashFileName = $hashName.'.zip';
+        $hashFileName = $hashName . '.zip';
         $scormData = $this->parseScormArchive($file);
-        $this->unzipScormArchive($file, 'scorm/'. $scormData['version'].'/'.$hashName);
+        $this->unzipScormArchive($file, 'scorm/' . $scormData['version'] . '/' . $hashName);
 
-        if (!config()->has('filesystems.disks.'.config('scorm.disk').'.root')) {
+        if (!config()->has('filesystems.disks.' . config('scorm.disk') . '.root')) {
             throw new StorageNotFoundException();
         }
 
-        $rootFolder =   config('filesystems.disks.'.config('scorm.disk').'.root');
+        $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root');
 
         if (substr($rootFolder, -1) != '/') {
             // If end with xxx/
-            $rootFolder =   config('filesystems.disks.'.config('scorm.disk').'.root').'/';
+            $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
         }
 
-        $destinationDir = 'scorm/'. $scormData['version'].'/'.$rootFolder.$hashName; // file path
+        $destinationDir = 'scorm/' . $scormData['version'] . '/' . $rootFolder . $hashName; // file path
 
         // Move Scorm archive in the files directory
-        $finalFile = $file->move($destinationDir, $hashName.'.zip');
+        $finalFile = $file->move($destinationDir, $hashName . '.zip');
 
         return [
             'name' => $hashFileName, // to follow standard file data format
@@ -552,7 +555,8 @@ class ScormService implements ScormServiceContract
                     $bestStatus = $lessonStatus;
                 }
 
-                if (empty($tracking->getCompletionStatus())
+                if (
+                    empty($tracking->getCompletionStatus())
                     || ($completionStatus !== $tracking->getCompletionStatus() && $statusPriority[$completionStatus] > $statusPriority[$tracking->getCompletionStatus()])
                 ) {
                     // This is no longer needed as completionStatus and successStatus are merged together
@@ -644,7 +648,7 @@ class ScormService implements ScormServiceContract
             $remainingTime %= 3600;
             $nbMinutes = (int) ($remainingTime / 60);
             $nbSeconds = $remainingTime % 60;
-            $result .= 'P'.$nbDays.'DT'.$nbHours.'H'.$nbMinutes.'M'.$nbSeconds.'S';
+            $result .= 'P' . $nbDays . 'DT' . $nbHours . 'H' . $nbMinutes . 'M' . $nbSeconds . 'S';
         }
 
         return $result;
@@ -665,5 +669,14 @@ class ScormService implements ScormServiceContract
         }
 
         return $formattedValue;
+    }
+
+    public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator
+    {
+        $paginator = ScormModel::with(
+            ['scos']
+        )->select($columns)->paginate(intval($per_page));
+
+        return $paginator;
     }
 }

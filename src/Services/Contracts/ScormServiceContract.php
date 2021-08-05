@@ -4,6 +4,7 @@
 namespace EscolaLms\Scorm\Services\Contracts;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface ScormServiceContract
 {
@@ -18,4 +19,6 @@ interface ScormServiceContract
     public function findScoTrackingId($scoUuid, $scoTrackingUuid);
     public function checkUserIsCompletedScorm($scormId, $userId);
     public function updateScoTracking($scoUuid, $userId, $data);
+    public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator;
+
 }

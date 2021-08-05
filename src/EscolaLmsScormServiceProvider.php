@@ -21,6 +21,10 @@ class EscolaLmsScormServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'scorm');
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/scorm'),
+        ]);
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }

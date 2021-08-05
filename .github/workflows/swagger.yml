@@ -20,7 +20,7 @@ jobs:
         run: cp -r env/codecov/. .
 
       - name: add Contracts main annotaion
-        run: php -r "file_put_contents('src/EscolaLmsPagesServiceProvider.php', str_replace('SWAGGER_VERSION', '@OA\Info(title=\"EscolaLMS\", version=\"0.0.1\")', file_get_contents('src/EscolaLmsPagesServiceProvider.php')));"
+        run: php -r "file_put_contents('src/EscolaLmsScormServiceProvider.php', str_replace('SWAGGER_VERSION', '@OA\Info(title=\"EscolaLMS\", version=\"0.0.1\")', file_get_contents('src/EscolaLmsScormServiceProvider.php')));"
 
       - name: Update composer
         run: composer update
