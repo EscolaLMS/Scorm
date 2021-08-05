@@ -3,7 +3,7 @@ tags
 .phpunit.result.cache
 .idea/
 src/oa_version.php
-phpunit.xml
-testbench.yaml
+./phpunit.xml
+./testbench.yaml
 composer.lock
-.env
+./.env
