@@ -108,12 +108,17 @@ class ScormService implements ScormServiceContract
             }
         }
 
-        return  $scormData;
+        return  [
+            'scormData'=> $scormData,
+            'model' => $scorm            
+        ];
     }
 
     public function removeRecursion($data)
     {
-        return array_map(function ($row) {
+
+        $scormData = $data['scormData'];
+        $scormData['scos'] = array_map(function ($row) {
             if (isset($row->scoChildren)) {
                 $row->scoChildren = array_map(function ($child) {
                     if (isset($child->scoParent)) {
@@ -123,7 +128,10 @@ class ScormService implements ScormServiceContract
                 }, $row->scoChildren);
             }
             return $row;
-        }, $data['scos']);
+        }, $data['scormData']['scos']);
+
+        return array_merge($data, ['scormData' => $scormData]);
+
     }
 
     public function parseScormArchive(UploadedFile $file)

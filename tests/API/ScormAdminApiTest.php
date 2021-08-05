@@ -12,10 +12,11 @@ use EscolaLms\HeadlessH5P\Models\H5PContent;
 
 use EscolaLms\HeadlessH5P\Services\Contracts\HeadlessH5PServiceContract;
 
-class ScormAdminApi extends TestCase
+class ScormAdminApiTest extends TestCase
 {
     use DatabaseTransactions;
-    public function test_content_create()
+
+    public function test_content_upload()
     {
         $this->authenticateAsAdmin();
         // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
@@ -25,27 +26,62 @@ class ScormAdminApi extends TestCase
 
         copy($filepath, $storage_path);
 
-        $h5pFile = new UploadedFile($storage_path, $filename, 'application/zip', null, true);
+        $zipFile = new UploadedFile($storage_path, $filename, 'application/zip', null, true);
 
-        $response = $this->post('/api/admin/scorm/upload', [
-            'h5p_file' => $h5pFile,
+        $response = $this->actingAs($this->user,'api')->post('/api/admin/scorm/upload', [
+            'zip' => $zipFile,
         ]);
-
-        $library = H5PLibrary::where('runnable', 1)->first();
-
-        // TODO this should be from factory ?
-        $response = $this->postJson('/api/hh5p/content', [
-            "nonce"=>bin2hex(random_bytes(4)),
-            "title"=>"The Title",
-            "library"=>$library->uberName,
-            "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-        ]);
-
-       
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['id']);
+        $data = $response->getData();
+
+
+        $this->assertEquals($data->data->scormData->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+
+        $response = $this->actingAs($this->user,'api')->get('/api/admin/scorm');
+
+        $list =  $response->getData();
+
+        $found = array_filter($list->data->data, function($item) use ($data) {
+            if ($item->uuid === $data->data->model->uuid) {
+                return true;
+            }
+            return false;
+        });
+
+        $this->assertCount(1,$found);
+
+        
+        
+
+  
     }
+
+    public function test_content_parse()
+    {
+        $this->authenticateAsAdmin();
+        // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
+        $filename = 'employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip';
+        $filepath = realpath(__DIR__.'/../../database/seeders/mocks/'.$filename);
+        $storage_path = storage_path($filename);
+
+        copy($filepath, $storage_path);
+
+        $zipFile = new UploadedFile($storage_path, $filename, 'application/zip', null, true);
+
+        $response = $this->actingAs($this->user,'api')->post('/api/admin/scorm/parse', [
+            'zip' => $zipFile,
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->getData();
+
+        $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+        
+  
+    }
+
+    /*
 
     public function test_content_create_no_nonce()
     {
@@ -261,4 +297,6 @@ class ScormAdminApi extends TestCase
         $this->assertTrue(is_integer($data->id));
         $this->assertTrue(is_object($data->params));
     }
+
+    */
 }
