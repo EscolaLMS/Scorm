@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
 
     private function fromZip($filePath)
     {
-        $fullFilePath = __DIR__.'/scorm/'.$filePath;
-        $fullTmpPath = __DIR__.'/scorm/tmp.zip';
+        $fullFilePath = __DIR__.'/mocks/'.$filePath;
+        $fullTmpPath = __DIR__.'/mocks/tmp.zip';
 
         copy($fullFilePath, $fullTmpPath);
         $file =  new UploadedFile($fullTmpPath, basename($filePath), 'application/zip', null, true);
