@@ -53,8 +53,8 @@ class DatabaseSeeder extends Seeder
 
     public function run()
     {
-        $this->fromZip('employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip');
-        $this->fromZip('RuntimeBasicCalls_Scorm12.zip');
-        $this->fromZip('SL360_LMS_Scorm_1_2.zip');
+        $this->fromZip('employee-health-and-wellness-sample-course-scorm12-z_legm6c.zip');
+        $this->fromZip('runtimebasiccalls_scorm12.zip');
+        $this->fromZip('sl360_lms_scorm_1_2.zip');
     }
 }

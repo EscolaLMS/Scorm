@@ -1,12 +1,12 @@
 <?php
 
-namespace EscolaLms\Pages\Tests;
+namespace EscolaLms\Scorm\Tests;
 
 use EscolaLms\Core\EscolaLmsServiceProvider;
 use EscolaLms\Core\Models\User;
-use EscolaLms\Pages\AuthServiceProvider;
-use EscolaLms\Pages\Database\Seeders\PermissionTableSeeder;
-use EscolaLms\Pages\EscolaLmsPagesServiceProvider;
+use EscolaLms\Scorm\AuthServiceProvider;
+use EscolaLms\Scorm\Database\Seeders\PermissionTableSeeder;
+use EscolaLms\Scorm\EscolaLmsScormServiceProvider;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\PassportServiceProvider;
@@ -28,7 +28,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
     {
         return [
             ...parent::getPackageProviders($app),
-            EscolaLmsPagesServiceProvider::class,
+            EscolaLmsScormServiceProvider::class,
             PassportServiceProvider::class,
             PermissionServiceProvider::class,
             AuthServiceProvider::class
@@ -38,21 +38,21 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
     protected function getEnvironmentSetUp($app)
     {
         parent::getEnvironmentSetUp($app);
+        $app['config']->set('scorm', [ 'table_names' =>  [
+            'user_table'   =>  'users',
+            'scorm_table'   =>  'scorm',
+            'scorm_sco_table'   =>  'scorm_sco',
+            'scorm_sco_tracking_table'   =>  'scorm_sco_tracking',
+        ],
+        // Scorm directory. You may create a custom path in file system
+        'disk'  =>  'local']);
     }
 
     protected function authenticateAsAdmin()
     {
         $this->user = config('auth.providers.users.model')::factory()->create();
-        $this->user->guard_name = 'api';
-        $this->user->givePermissionTo('create pages');
-        $this->user->givePermissionTo('update pages');
-        $this->user->givePermissionTo('delete pages');
 
-        /** @var User $user */
-//        $this->user = User::factory()->create();
-//        $this->user = $this->user->assignRole('admin');
-//        $this->user->guard_name = 'api';
-//        Auth::guard()->setUser($this->user);
-//        $user = config('auth.providers.users.model')::factory()->create();
+        $this->user->guard_name = 'api';
+        $this->user->assignRole('admin');
     }
 }
