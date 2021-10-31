@@ -1,14 +1,12 @@
 # Pages
 
-Static page management package
+SCORM management package
 
-[![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/pages/)
-[![codecov](https://codecov.io/gh/EscolaLMS/Files/branch/main/graph/badge.svg?token=NRAN4R8AGZ)](https://codecov.io/gh/EscolaLMS/pages)
-[![phpunit](https://github.com/EscolaLMS/pages/actions/workflows/test.yml/badge.svg)](https://github.com/EscolaLMS/pages/actions/workflows/test.yml)
-[![downloads](https://img.shields.io/packagist/dt/escolalms/pages)](https://packagist.org/packages/escolalms/pages)
-[![downloads](https://img.shields.io/packagist/v/escolalms/pages)](https://packagist.org/packages/escolalms/pages)
-[![downloads](https://img.shields.io/packagist/l/escolalms/pages)](https://packagist.org/packages/escolalms/pages)
+[![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/Scorm/)
+[![codecov](https://codecov.io/gh/EscolaLMS/Scorm/branch/main/graph/badge.svg?token=gBzpyNK8DQ)](https://codecov.io/gh/EscolaLMS/Scorm)
+[![phpunit](https://github.com/EscolaLMS/Scorm/actions/workflows/test.yml/badge.svg)](https://github.com/EscolaLMS/Scorm/actions/workflows/test.yml)
+[![downloads](https://img.shields.io/packagist/dt/escolalms/scorm)](https://packagist.org/packages/escolalms/scorm)
+[![downloads](https://img.shields.io/packagist/v/escolalms/scorm)](https://packagist.org/packages/escolalms/scorm)
+[![downloads](https://img.shields.io/packagist/l/escolalms/scorm)](https://packagist.org/packages/escolalms/scorm)
 
-
-## TODO
-* list -> paging
+See swagger for details 

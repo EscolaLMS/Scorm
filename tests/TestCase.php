@@ -46,13 +46,15 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
         ],
         // Scorm directory. You may create a custom path in file system
         'disk'  =>  'local']);
+
     }
 
     protected function authenticateAsAdmin()
     {
         $this->user = config('auth.providers.users.model')::factory()->create();
-
+        
         $this->user->guard_name = 'api';
         $this->user->assignRole('admin');
+        
     }
 }

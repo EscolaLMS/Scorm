@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api']], function () {
     Route::post('/upload', [ScormController::class, "upload"]);
     Route::post('/parse', [ScormController::class, "parse"]);
+    Route::get('/', [ScormController::class, "index"]);
 });
 
 Route::group(['prefix' => 'api/scorm'], function () {

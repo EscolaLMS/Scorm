@@ -1,6 +1,14 @@
 name: Tests PHPUnit in environments
 
-on: [pull_request]
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
 
 jobs:
   php8-laravel-latest-phpunit-mysql:

@@ -4,7 +4,8 @@ namespace EscolaLms\Scorm\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Http\UploadedFile;
-use App\Library\ScormHelper;
+
+use EscolaLms\Scorm\Services\ScormService;
 use Peopleaps\Scorm\Model\ScormModel;
 
 class DatabaseSeeder extends Seeder
@@ -19,13 +20,13 @@ class DatabaseSeeder extends Seeder
 
     public function __construct()
     {
-        $this->helper =  new ScormHelper();
+        $this->helper =  new ScormService();
     }
 
     private function fromZip($filePath)
     {
-        $fullFilePath = __DIR__.'/scorm/'.$filePath;
-        $fullTmpPath = __DIR__.'/scorm/tmp.zip';
+        $fullFilePath = __DIR__.'/mocks/'.$filePath;
+        $fullTmpPath = __DIR__.'/mocks/tmp.zip';
 
         copy($fullFilePath, $fullTmpPath);
         $file =  new UploadedFile($fullTmpPath, basename($filePath), 'application/zip', null, true);
