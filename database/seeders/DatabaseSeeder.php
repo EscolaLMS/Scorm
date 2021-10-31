@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
 
     private function fromZip($filePath)
     {
-        $fullFilePath = __DIR__.'/mocks/'.$filePath;
-        $fullTmpPath = __DIR__.'/mocks/tmp.zip';
+        $fullFilePath = __DIR__.'/../mocks/'.$filePath;
+        $fullTmpPath = __DIR__.'/../mocks/tmp.zip';
 
         copy($fullFilePath, $fullTmpPath);
         $file =  new UploadedFile($fullTmpPath, basename($filePath), 'application/zip', null, true);
@@ -54,8 +54,8 @@ class DatabaseSeeder extends Seeder
 
     public function run()
     {
-        $this->fromZip('employee-health-and-wellness-sample-course-scorm12-z_legm6c.zip');
-        $this->fromZip('runtimebasiccalls_scorm12.zip');
-        $this->fromZip('sl360_lms_scorm_1_2.zip');
+        $this->fromZip('1.zip');
+        $this->fromZip('2.zip');
+        $this->fromZip('3.zip');
     }
 }
