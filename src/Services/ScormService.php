@@ -32,10 +32,7 @@ class ScormService implements ScormServiceContract
     private $scormLib;
 
     /**
-     * Constructor.
-     *
-     * @param string $filesDir
-     * @param string $uploadDir
+     * Constructor
      */
     public function __construct()
     {
@@ -45,78 +42,67 @@ class ScormService implements ScormServiceContract
     public function uploadScormArchive(UploadedFile $file)
     {
         // Checks if it is a valid scorm archive
-        $scormData  =   null;
         $zip = new ZipArchive();
         $openValue = $zip->open($file);
-        $oldModel   =   null;
-
         $isScormArchive = (true === $openValue) && $zip->getStream('imsmanifest.xml');
 
         $zip->close();
 
         if (!$isScormArchive) {
             throw new InvalidScormArchiveException('invalid_scorm_archive_message');
-        } else {
-            $scormData  =   $this->generateScorm($file);
         }
 
-        // $oldModel   =   $model->scorm()->first(); // get old scorm data for deletion (If success to store new)
+        $scormData = $this->generateScorm($file);
 
         // save to db
         if ($scormData && is_array($scormData)) {
-            $scorm  =   new ScormModel();
-            $scorm->version =   $scormData['version'];
-            $scorm->hash_name =   $scormData['hashName'];
-            $scorm->origin_file =   $scormData['name'];
-            $scorm->origin_file_mime =   $scormData['type'];
-            $scorm->uuid =   $scormData['hashName'];
+            $scorm = new ScormModel();
+            $scorm->version = $scormData['version'];
+            $scorm->hash_name = $scormData['hashName'];
+            $scorm->origin_file = $scormData['name'];
+            $scorm->origin_file_mime = $scormData['type'];
+            $scorm->uuid = $scormData['hashName'];
             $scorm->save();
 
-            // $scorm  =   $model->scorm->save($scorm);
-            //$model->save();
-
-            if (!empty($scormData['scos']) && is_array($scormData['scos'])) {
-                foreach ($scormData['scos'] as $scoData) {
-                    $scoParent    =   null;
-                    if (!empty($scoData->scoParent)) {
-                        $scoParent    =   ScormScoModel::where('uuid', $scoData->scoParent->uuid)->first();
-                    }
-
-                    $sco    =   new ScormScoModel();
-                    $sco->scorm_id  =   $scorm->id;
-                    $sco->uuid  =   $scoData->uuid;
-                    $sco->sco_parent_id  =   $scoParent ? $scoParent->id : null;
-                    $sco->entry_url  =   $scoData->entryUrl;
-                    $sco->identifier  =   $scoData->identifier;
-                    $sco->title  =   $scoData->title;
-                    $sco->visible  =   $scoData->visible;
-                    $sco->sco_parameters  =   $scoData->parameters;
-                    $sco->launch_data  =   $scoData->launchData;
-                    $sco->max_time_allowed  =   $scoData->maxTimeAllowed;
-                    $sco->time_limit_action  =   $scoData->timeLimitAction;
-                    $sco->block  =   $scoData->block;
-                    $sco->score_int  =   $scoData->scoreToPassInt;
-                    $sco->score_decimal  =   $scoData->scoreToPassDecimal;
-                    $sco->completion_threshold  =   $scoData->completionThreshold;
-                    $sco->prerequisites  =   $scoData->prerequisites;
-                    $sco->save();
-                }
-            }
-
-            if ($oldModel != null) {
-                $this->deleteScormData($oldModel);
-            }
+            $this->saveToDb($scormData['scos'], $scorm);
         }
 
-        return  [
-            'scormData'=> $scormData,
-            'model' => $scorm            
+        return [
+            'scormData' => $scormData,
+            'model' => $scorm ?? null
         ];
+    }
+
+    public function saveToDb(array $scormData, ScormModel $scormModel = null)
+    {
+        foreach ($scormData as $scorm) {
+            $sco = new ScormScoModel();
+            $sco->scorm_id = $scormModel->id;
+            $sco->uuid = $scorm->uuid;
+            $sco->sco_parent_id = $scorm->scoParent ? $scorm->scoParent->id : null;
+            $sco->entry_url = $scorm->entryUrl;
+            $sco->identifier = $scorm->identifier;
+            $sco->title = $scorm->title;
+            $sco->visible = $scorm->visible;
+            $sco->sco_parameters = $scorm->parameters;
+            $sco->launch_data = $scorm->launchData;
+            $sco->max_time_allowed = $scorm->maxTimeAllowed;
+            $sco->time_limit_action = $scorm->timeLimitAction;
+            $sco->block = $scorm->block;
+            $sco->score_int = $scorm->scoreToPassInt;
+            $sco->score_decimal = $scorm->scoreToPassDecimal;
+            $sco->completion_threshold = $scorm->completionThreshold;
+            $sco->prerequisites = $scorm->prerequisites;
+            $sco->save();
+
+            if (!empty($scorm->scoChildren)) {
+                $this->saveToDb($scorm->scoChildren, $scormModel);
+            }
+        }
     }
 
     public function removeRecursion($data)
     {
-
         $scormData = $data['scormData'];
         $scormData['scos'] = array_map(function ($row) {
             if (isset($row->scoChildren)) {
@@ -186,7 +172,7 @@ class ScormService implements ScormServiceContract
     {
         // Delete after the previous item is stored
         if ($model) {
-            $oldScos    =   $model->scos()->get();
+            $oldScos = $model->scos()->get();
 
             // Delete all tracking associate with sco
             foreach ($oldScos as $oldSco) {
@@ -200,13 +186,14 @@ class ScormService implements ScormServiceContract
             $this->deleteScormFolder($model->hash_name);
         }
     }
+
     /**
      * @param $folderHashedName
      * @return bool
      */
     protected function deleteScormFolder($folderHashedName)
     {
-        $response   =   Storage::disk('scorm')->deleteDirectory($folderHashedName);
+        $response = Storage::disk('scorm')->deleteDirectory($folderHashedName);
 
         return $response;
     }
@@ -225,11 +212,11 @@ class ScormService implements ScormServiceContract
             throw new StorageNotFoundException();
         }
 
-        $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root');
+        $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root');
 
         if (substr($rootFolder, -1) != '/') {
             // If end with xxx/
-            $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
+            $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
         }
 
         $destinationDir = $rootFolder . $hashName; // file path
@@ -258,11 +245,11 @@ class ScormService implements ScormServiceContract
             throw new StorageNotFoundException();
         }
 
-        $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root');
+        $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root');
 
         if (substr($rootFolder, -1) != '/') {
             // If end with xxx/
-            $rootFolder =   config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
+            $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
         }
 
         $destinationDir = 'scorm/' . $scormData['version'] . '/' . $rootFolder . $hashName; // file path
@@ -286,9 +273,8 @@ class ScormService implements ScormServiceContract
      */
     public function getScos($scormId)
     {
-        $scos  =   ScormScoModel::with([
-            'scorm'
-        ])->where('scorm_id', $scormId)
+        $scos = ScormScoModel::with(['scorm'])
+            ->where('scorm_id', $scormId)
             ->get();
 
         return $scos;
@@ -301,9 +287,8 @@ class ScormService implements ScormServiceContract
      */
     public function getScoByUuid($scoUuid)
     {
-        $sco    =   ScormScoModel::with([
-            'scorm'
-        ])->where('uuid', $scoUuid)
+        $sco = ScormScoModel::with(['scorm'])
+            ->where('uuid', $scoUuid)
             ->firstOrFail();
 
         return $sco;
@@ -316,7 +301,7 @@ class ScormService implements ScormServiceContract
 
     public function createScoTracking($scoUuid, $userId = null)
     {
-        $sco    =   ScormScoModel::where('uuid', $scoUuid)->firstOrFail();
+        $sco = ScormScoModel::where('uuid', $scoUuid)->firstOrFail();
 
         $version = $sco->scorm->version;
         $scoTracking = new ScoTracking();
@@ -351,32 +336,32 @@ class ScormService implements ScormServiceContract
         $scoTracking->setUserId($userId);
 
         // Create a new tracking model
-        $storeTracking  =   ScormScoTrackingModel::firstOrCreate([
-            'user_id'   =>  $userId,
-            'sco_id'    =>  $sco->id
+        $storeTracking = ScormScoTrackingModel::firstOrCreate([
+            'user_id' => $userId,
+            'sco_id' => $sco->id
         ], [
-            'uuid'  =>  Uuid::uuid4(),
-            'progression'  =>  $scoTracking->getProgression(),
-            'score_raw'  =>  $scoTracking->getScoreRaw(),
-            'score_min'  =>  $scoTracking->getScoreMin(),
-            'score_max'  =>  $scoTracking->getScoreMax(),
-            'score_scaled'  =>  $scoTracking->getScoreScaled(),
-            'lesson_status'  =>  $scoTracking->getLessonStatus(),
-            'completion_status'  =>  $scoTracking->getCompletionStatus(),
-            'session_time'  =>  $scoTracking->getSessionTime(),
-            'total_time_int'  =>  $scoTracking->getTotalTimeInt(),
-            'total_time_string'  =>  $scoTracking->getTotalTimeString(),
-            'entry'  =>  $scoTracking->getEntry(),
-            'suspend_data'  =>  $scoTracking->getSuspendData(),
-            'credit'  =>  $scoTracking->getCredit(),
-            'exit_mode'  =>  $scoTracking->getExitMode(),
-            'lesson_location'  =>  $scoTracking->getLessonLocation(),
-            'lesson_mode'  =>  $scoTracking->getLessonMode(),
-            'is_locked'  =>  $scoTracking->getIsLocked(),
-            'details'  =>  $scoTracking->getDetails(),
-            'latest_date'  =>  $scoTracking->getLatestDate(),
-            'created_at'  =>  Carbon::now(),
-            'updated_at'  =>  Carbon::now(),
+            'uuid' => Uuid::uuid4(),
+            'progression' => $scoTracking->getProgression(),
+            'score_raw' => $scoTracking->getScoreRaw(),
+            'score_min' => $scoTracking->getScoreMin(),
+            'score_max' => $scoTracking->getScoreMax(),
+            'score_scaled' => $scoTracking->getScoreScaled(),
+            'lesson_status' => $scoTracking->getLessonStatus(),
+            'completion_status' => $scoTracking->getCompletionStatus(),
+            'session_time' => $scoTracking->getSessionTime(),
+            'total_time_int' => $scoTracking->getTotalTimeInt(),
+            'total_time_string' => $scoTracking->getTotalTimeString(),
+            'entry' => $scoTracking->getEntry(),
+            'suspend_data' => $scoTracking->getSuspendData(),
+            'credit' => $scoTracking->getCredit(),
+            'exit_mode' => $scoTracking->getExitMode(),
+            'lesson_location' => $scoTracking->getLessonLocation(),
+            'lesson_mode' => $scoTracking->getLessonMode(),
+            'is_locked' => $scoTracking->getIsLocked(),
+            'details' => $scoTracking->getDetails(),
+            'latest_date' => $scoTracking->getLatestDate(),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
 
         $scoTracking->setUuid($storeTracking->uuid);
@@ -415,14 +400,14 @@ class ScormService implements ScormServiceContract
 
     public function checkUserIsCompletedScorm($scormId, $userId)
     {
-        $completedSco    =   [];
-        $scos   =   ScormScoModel::where('scorm_id', $scormId)->get();
+        $completedSco = [];
+        $scos = ScormScoModel::where('scorm_id', $scormId)->get();
 
         foreach ($scos as $sco) {
-            $scoTracking    =   ScormScoTrackingModel::where('sco_id', $sco->id)->where('user_id', $userId)->first();
+            $scoTracking = ScormScoTrackingModel::where('sco_id', $sco->id)->where('user_id', $userId)->first();
 
             if ($scoTracking && ($scoTracking->lesson_status == 'passed' || $scoTracking->lesson_status == 'completed')) {
-                $completedSco[] =   true;
+                $completedSco[] = true;
             }
         }
 
@@ -437,8 +422,8 @@ class ScormService implements ScormServiceContract
     {
         $tracking = $this->createScoTracking($scoUuid, $userId);
         $tracking->setLatestDate(Carbon::now());
-        $sco    =   $tracking->getSco();
-        $scorm  =   ScormModel::where('id', $sco['scorm_id'])->firstOrFail();
+        $sco = $tracking->getSco();
+        $scorm = ScormModel::where('id', $sco['scorm_id'])->firstOrFail();
 
         $statusPriority = [
             'unknown' => 0,
@@ -476,7 +461,7 @@ class ScormService implements ScormServiceContract
 
                 // Persist total time
                 if ($tracking->getTotalTimeInt() > 0) {
-                    $totalTimeInHundredth   +=  $tracking->getTotalTimeInt();
+                    $totalTimeInHundredth += $tracking->getTotalTimeInt();
                 }
 
                 $tracking->setTotalTime($totalTimeInHundredth, Scorm::SCORM_12);
@@ -583,29 +568,29 @@ class ScormService implements ScormServiceContract
                 break;
         }
 
-        $updateResult   =   ScormScoTrackingModel::where('user_id', $tracking->getUserId())
+        $updateResult = ScormScoTrackingModel::where('user_id', $tracking->getUserId())
             ->where('sco_id', $sco['id'])
             ->firstOrFail();
 
-        $updateResult->progression  =   $tracking->getProgression();
-        $updateResult->score_raw    =   $tracking->getScoreRaw();
-        $updateResult->score_min    =   $tracking->getScoreMin();
-        $updateResult->score_max    =   $tracking->getScoreMax();
-        $updateResult->score_scaled    =   $tracking->getScoreScaled();
-        $updateResult->lesson_status    =   $tracking->getLessonStatus();
-        $updateResult->completion_status    =   $tracking->getCompletionStatus();
-        $updateResult->session_time    =   $tracking->getSessionTime();
-        $updateResult->total_time_int    =   $tracking->getTotalTimeInt();
-        $updateResult->total_time_string    =   $tracking->getTotalTimeString();
-        $updateResult->entry    =   $tracking->getEntry();
-        $updateResult->suspend_data    =   $tracking->getSuspendData();
-        $updateResult->exit_mode    =   $tracking->getExitMode();
-        $updateResult->credit    =   $tracking->getCredit();
-        $updateResult->lesson_location    =   $tracking->getLessonLocation();
-        $updateResult->lesson_mode    =   $tracking->getLessonMode();
-        $updateResult->is_locked    =   $tracking->getIsLocked();
-        $updateResult->details    =   $tracking->getDetails();
-        $updateResult->latest_date    =   $tracking->getLatestDate();
+        $updateResult->progression = $tracking->getProgression();
+        $updateResult->score_raw = $tracking->getScoreRaw();
+        $updateResult->score_min = $tracking->getScoreMin();
+        $updateResult->score_max = $tracking->getScoreMax();
+        $updateResult->score_scaled = $tracking->getScoreScaled();
+        $updateResult->lesson_status = $tracking->getLessonStatus();
+        $updateResult->completion_status = $tracking->getCompletionStatus();
+        $updateResult->session_time = $tracking->getSessionTime();
+        $updateResult->total_time_int = $tracking->getTotalTimeInt();
+        $updateResult->total_time_string = $tracking->getTotalTimeString();
+        $updateResult->entry = $tracking->getEntry();
+        $updateResult->suspend_data = $tracking->getSuspendData();
+        $updateResult->exit_mode = $tracking->getExitMode();
+        $updateResult->credit = $tracking->getCredit();
+        $updateResult->lesson_location = $tracking->getLessonLocation();
+        $updateResult->lesson_mode = $tracking->getLessonMode();
+        $updateResult->is_locked = $tracking->getIsLocked();
+        $updateResult->details = $tracking->getDetails();
+        $updateResult->latest_date = $tracking->getLatestDate();
 
         $updateResult->save();
 
@@ -645,16 +630,16 @@ class ScormService implements ScormServiceContract
     private function retrieveIntervalFromSeconds($seconds)
     {
         $result = '';
-        $remainingTime = (int) $seconds;
+        $remainingTime = (int)$seconds;
 
         if (empty($remainingTime)) {
             $result .= 'PT0S';
         } else {
-            $nbDays = (int) ($remainingTime / 86400);
+            $nbDays = (int)($remainingTime / 86400);
             $remainingTime %= 86400;
-            $nbHours = (int) ($remainingTime / 3600);
+            $nbHours = (int)($remainingTime / 3600);
             $remainingTime %= 3600;
-            $nbMinutes = (int) ($remainingTime / 60);
+            $nbMinutes = (int)($remainingTime / 60);
             $nbSeconds = $remainingTime % 60;
             $result .= 'P' . $nbDays . 'DT' . $nbHours . 'H' . $nbMinutes . 'M' . $nbSeconds . 'S';
         }
@@ -681,10 +666,8 @@ class ScormService implements ScormServiceContract
 
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator
     {
-        $paginator = ScormModel::with(
-            ['scos']
-        )->select($columns)->paginate(intval($per_page));
-
-        return $paginator;
+        return ScormModel::with(['scos' => fn ($query) => $query->select(['*'])->where('block', '=', 0)])
+            ->select($columns)
+            ->paginate(intval($per_page));
     }
 }
