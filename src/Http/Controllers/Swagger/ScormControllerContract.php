@@ -4,11 +4,9 @@ namespace EscolaLms\Scorm\Http\Controllers\Swagger;
 
 use EscolaLms\Scorm\Http\Requests\ScormCreateRequest;
 use EscolaLms\Scorm\Http\Requests\ScormListRequest;
-
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
-use Illuminate\View\View;
 
 interface ScormControllerContract
 {
@@ -36,7 +34,7 @@ interface ScormControllerContract
      *      ),
      *     @OA\Response(
      *         response=200,
-     *         description="scorm data",     
+     *         description="scorm data",
      *      ),
      *     @OA\Response(
      *          response=401,
@@ -56,10 +54,6 @@ interface ScormControllerContract
      * @return JsonResponse
      */
     public function upload(ScormCreateRequest $request): JsonResponse;
-
-
-
-
 
     /**
      * @OA\Post(
@@ -82,10 +76,10 @@ interface ScormControllerContract
      *                  )
      *              )
      *          )
-     *      ),     
+     *      ),
      *     @OA\Response(
      *         response=200,
-     *         description="scorm data",     
+     *         description="scorm data",
      *      ),
      *     @OA\Response(
      *          response=401,
@@ -125,7 +119,7 @@ interface ScormControllerContract
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="",     
+     *         description="",
      *      ),
      *     @OA\Response(
      *          response=401,
@@ -141,10 +135,11 @@ interface ScormControllerContract
      *      ),
      * )
      *
+     * @param string $uuid
      * @param Request $request
-     * @return Response
+     * @return View
      */
-    public function show(string $uuid, Request $request):View;
+    public function show(string $uuid, Request $request): View;
 
     /**
      * @OA\Get(
@@ -172,7 +167,7 @@ interface ScormControllerContract
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="",     
+     *         description="",
      *      ),
      *     @OA\Response(
      *          response=401,
@@ -188,8 +183,8 @@ interface ScormControllerContract
      *      ),
      * )
      *
-     * @param Request $request
-     * @return ScormListRequest
+     * @param ScormListRequest $request
+     * @return JsonResponse
      */
-    public function index(ScormListRequest $request):JsonResponse;
+    public function index(ScormListRequest $request): JsonResponse;
 }

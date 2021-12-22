@@ -9,12 +9,33 @@
     html,body,iframe { width: 100%; height: 100%; padding: 0; margin: 0; border: none}
   </style>
   <script type="text/javascript">
-    var settings = @json($data);
-    window.API = new Scorm12API(settings.player);
-    window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
-      // TODO push this data though post message
-        console.log(arguments);
-    });
+    let settings = @json($data);
+    if (settings.version === 'scorm_12') {
+        scorm12();
+    }
+    else if (settings.version === 'scorm_2004') {
+        scorm2004();
+    }
+
+    function scorm12() {
+        window.API = new Scorm12API(settings.player);
+        console.log(window.API);
+
+        window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
+            // TODO push this data though post message
+            console.log(arguments);
+        });
+    }
+
+    function scorm2004() {
+        window.API_1484_11 = new Scorm2004API(settings.player);
+        console.log(window.API_1484_11);
+
+        window.API_1484_11.on("SetValue.cmi.* ", function(CMIElement, value) {
+            console.log(arguments);
+        });
+    }
+
   </script>
 </head>
 

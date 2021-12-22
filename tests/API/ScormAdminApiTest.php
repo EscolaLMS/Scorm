@@ -5,12 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
-use EscolaLms\HeadlessH5P\Models\H5PLibrary;
-use EscolaLms\HeadlessH5P\Models\H5PContent;
-
-//use Illuminate\Support\Facades\App;
-
-use EscolaLms\HeadlessH5P\Services\Contracts\HeadlessH5PServiceContract;
+use Illuminate\Testing\TestResponse;
 
 class ScormAdminApiTest extends TestCase
 {
@@ -18,29 +13,54 @@ class ScormAdminApiTest extends TestCase
 
     public function test_content_upload()
     {
-        $this->authenticateAsAdmin();
-        // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
-        $filename = '1.zip';
-        $filepath = realpath(__DIR__.'/../../database/mocks/'.$filename);
-        $storage_path = storage_path($filename);
+        $response = $this->uploadScorm();
+        $data = $response->getData();
 
-        copy($filepath, $storage_path);
+        $response->assertStatus(200);
+        $this->assertEquals($data->data->scormData->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+    }
 
-        $zipFile = new UploadedFile($storage_path, $filename, 'application/zip', null, true);
+    public function test_content_upload_invalid_data()
+    {
+        $this->actingAs($this->user, 'api')
+            ->json('POST', '/api/admin/scorm/upload', [
+                'zip' => UploadedFile::fake()->create('file.zip', 100, 'application/zip'),
+            ])->assertJson([
+                'success' => false,
+                'message' => "invalid_scorm_archive_message"
+            ]);
+    }
 
-        $response = $this->actingAs($this->user, 'api')->post('/api/admin/scorm/upload', [
+    public function test_content_upload_invalid_data_format()
+    {
+        $this->actingAs($this->user, 'api')
+            ->json('POST', '/api/admin/scorm/upload', [
+                'zip' => UploadedFile::fake()->create('file.svg', 100, 'application/svg'),
+            ])->assertJson([
+                'message' => 'The given data was invalid.',
+            ]);
+    }
+
+    public function test_content_parse()
+    {
+        $zipFile = $this->getUploadScormFile();
+        $response = $this->actingAs($this->user, 'api')->json('POST', '/api/admin/scorm/parse', [
             'zip' => $zipFile,
         ]);
 
-        $response->assertStatus(200);
         $data = $response->getData();
 
+        $response->assertStatus(200);
+        $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+    }
 
-        $this->assertEquals($data->data->scormData->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+    public function test_get_model_list()
+    {
+        $response = $this->uploadScorm();
+        $data = $response->getData();
 
         $response = $this->actingAs($this->user, 'api')->get('/api/admin/scorm');
-
-        $list =  $response->getData();
+        $list = $response->getData();
 
         $found = array_filter($list->data->data, function ($item) use ($data) {
             if ($item->uuid === $data->data->model->uuid) {
@@ -52,244 +72,33 @@ class ScormAdminApiTest extends TestCase
         $this->assertCount(1, $found);
     }
 
-    public function test_content_parse()
+    public function test_player_view()
     {
-        $this->authenticateAsAdmin();
-        // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
-        $filename = '1.zip';
-        $filepath = realpath(__DIR__.'/../../database/mocks/'.$filename);
-        $storage_path = storage_path($filename);
-
-        copy($filepath, $storage_path);
-
-        $zipFile = new UploadedFile($storage_path, $filename, 'application/zip', null, true);
-
-        $response = $this->actingAs($this->user, 'api')->post('/api/admin/scorm/parse', [
-            'zip' => $zipFile,
-        ]);
-
-        $response->assertStatus(200);
+        $response = $this->uploadScorm();
         $data = $response->getData();
 
-        $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
-    }
-
-    /*
-
-    public function test_content_create_no_nonce()
-    {
-        $response = $this->postJson('/api/hh5p/content', [
-            "title"=>"The Title",
-            "library"=>"Invalid lib name",
-            "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_content_create_invalid_library()
-    {
-        $response = $this->postJson('/api/hh5p/content', [
-            "nonce"=>bin2hex(random_bytes(4)),
-            "title"=>"The Title",
-            "library"=>"Invalid lib name",
-            "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_content_create_invalid_json()
-    {
-        $library = H5PLibrary::where('runnable', 1)->first();
-
-        $response = $this->postJson('/api/hh5p/content', [
-            "nonce"=>bin2hex(random_bytes(4)),
-            "title"=>"The Title",
-            "library"=>$library->uberName,
-            "params"=>"XXX!!!{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    ////
-
-    public function test_content_update()
-    {
-        $content = H5PContent::first();
-        $library = H5PLibrary::where('runnable', 1)->first();
-        $id = $content->id;
-
-        // TODO this should be from factory ?
-        $response = $this->postJson("/api/hh5p/content/$id", [
-          "nonce"=>bin2hex(random_bytes(4)),
-          "title"=>"The Title",
-          "library"=>$library->uberName,
-          "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-      ]);
-
-
-
+        $response = $this->actingAs($this->user, 'api')->get('/api/scorm/play/' . $data->data->scormData->scos[0]->uuid);
         $response->assertStatus(200);
-        $response->assertJsonStructure(['id']);
     }
 
-    public function test_content_update_no_nonce()
+    private function uploadScorm(): TestResponse
     {
-        $content = H5PContent::first();
-        $id = $content->id;
+        $zipFile = $this->getUploadScormFile();
 
-        $response = $this->postJson("/api/hh5p/content/$id", [
-            "title"=>"The Title",
-          "library"=>"Invalid lib name",
-          "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-      ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_content_update_invalid_library()
-    {
-        $content = H5PContent::first();
-        $id = $content->id;
-
-        $response = $this->postJson("/api/hh5p/content/$id", [
-            "nonce"=>bin2hex(random_bytes(4)),
-          "title"=>"The Title",
-          "library"=>"Invalid lib name",
-          "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-      ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_content_update_invalid_json()
-    {
-        $library = H5PLibrary::where('runnable', 1)->first();
-        $content = H5PContent::first();
-        $id = $content->id;
-
-        $response = $this->postJson("/api/hh5p/content/$id", [
-            "nonce"=>bin2hex(random_bytes(4)),
-          "title"=>"The Title",
-          "library"=>$library->uberName,
-          "params"=>"XXX!!!{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-      ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_content_list()
-    {
-        $response = $this->get("/api/hh5p/content");
-        $response->assertStatus(200);
-        $response->assertJsonStructure([
-            "current_page",
-            "data",
-            "first_page_url",
-            "from" ,
-            "last_page" ,
-            "last_page_url",
-            "links",
-            "next_page_url",
-            "path",
-            "per_page",
-            "prev_page_url",
-            "to",
-            "total"
+        return $this->actingAs($this->user, 'api')->json('POST', '/api/admin/scorm/upload', [
+            'zip' => $zipFile,
         ]);
     }
 
-    public function test_content_list_page()
+    private function getUploadScormFile(): UploadedFile
     {
-        $response = $this->get("/api/hh5p/content?page=2");
-        $response->assertStatus(200);
-        $response->assertJsonStructure([
-            "current_page",
-            "data",
-            "first_page_url",
-            "from" ,
-            "last_page" ,
-            "last_page_url",
-            "links",
-            "next_page_url",
-            "path",
-            "per_page",
-            "prev_page_url",
-            "to",
-            "total"
-        ]);
-    }
-
-
-    public function test_content_delete()
-    {
-        $library = H5PLibrary::where('runnable', 1)->first();
-
-
-        // TODO this should be from factory ?
-        $response = $this->postJson('/api/hh5p/content', [
-            "nonce"=>bin2hex(random_bytes(4)),
-            "title"=>"The Title",
-            "library"=>$library->uberName,
-            "params"=>"{\"params\":{\"taskDescription\":\"Documentation tool\",\"pagesList\":[{\"params\":{\"elementList\":[{\"params\":{},\"library\":\"H5P.Text 1.1\",\"metadata\":{\"contentType\":\"Text\",\"license\":\"U\",\"title\":\"Untitled Text\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Text\"},\"subContentId\":\"da3387da-355a-49fb-92bc-3a9a4e4646a9\"}],\"helpTextLabel\":\"More information\",\"helpText\":\"\"},\"library\":\"H5P.StandardPage 1.5\",\"metadata\":{\"contentType\":\"Standard page\",\"license\":\"U\",\"title\":\"Untitled Standard page\",\"authors\":[],\"changes\":[],\"extraTitle\":\"Untitled Standard page\"},\"subContentId\":\"ac6ffdac-be02-448c-861c-969e6a09dbd5\"}],\"i10n\":{\"previousLabel\":\"poprzedni\",\"nextLabel\":\"Next\",\"closeLabel\":\"Close\"}},\"metadata\":{\"license\":\"U\",\"authors\":[],\"changes\":[],\"extraTitle\":\"fdsfds\",\"title\":\"fdsfds\"}}"
-        ]);
-
-        $content = H5PContent::latest()->first();
-
-        $id = $content->id;
-
-        $response = $this->delete("/api/hh5p/content/$id");
-        $response->assertStatus(200);
-
-        $response = $this->delete("/api/hh5p/content/$id");
-        $response->assertStatus(422);
-    }
-
-    public function test_content_show()
-    {
-        $content = H5PContent::latest()->first();
-
-        $id = $content->id;
-        $response = $this->get("/api/hh5p/content/$id");
-        $response->assertStatus(200);
-
-        $data = json_decode($response->getContent());
-
-        $cid ="cid-$id";
-
-        $this->assertTrue(is_object($data->contents->$cid));
-    }
-
-    public function test_content_show_non_exisiting()
-    {
-        $id = 999999;
-        $response = $this->get("/api/hh5p/content/$id");
-        $response->assertStatus(422);
-    }
-
-    public function test_content_uploadig()
-    {
-        $filename = 'arithmetic-quiz.h5p';
-        $filepath = realpath(__DIR__.'/../mocks/'.$filename);
+        // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
+        $filename = '1.zip';
+        $filepath = realpath(__DIR__ . '/../../database/mocks/' . $filename);
         $storage_path = storage_path($filename);
 
         copy($filepath, $storage_path);
 
-        $h5pFile = new UploadedFile($storage_path, 'arithmetic-quiz.h5p', 'application/pdf', null, true);
-
-        $response = $this->post('/api/hh5p/content/upload', [
-            'h5p_file' => $h5pFile,
-        ]);
-
-        $response->assertStatus(200);
-
-        $data = json_decode($response->getContent());
-
-        $this->assertTrue(is_integer($data->id));
-        $this->assertTrue(is_object($data->params));
+        return new UploadedFile($storage_path, $filename, 'application/zip', null, true);
     }
-
-    */
 }
