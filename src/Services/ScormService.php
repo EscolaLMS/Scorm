@@ -95,10 +95,17 @@ class ScormService implements ScormServiceContract
         }
     }
 
-    public function removeRecursion($data): array
+    public function removeRecursion(array $data): array
     {
         $scormData = $data['scormData'];
-        $scormData['scos'] = array_map(function ($row) {
+        $scormData['scos'] = $this->removeRecursionFromChildren($scormData['scos']);
+
+        return array_merge($data, ['scormData' => $scormData]);
+    }
+
+    public function removeRecursionFromChildren(array $data): array
+    {
+        foreach ($data as $row) {
             if (isset($row->scoChildren)) {
                 $row->scoChildren = array_map(function ($child) {
                     if (isset($child->scoParent)) {
@@ -106,11 +113,12 @@ class ScormService implements ScormServiceContract
                     }
                     return $child;
                 }, $row->scoChildren);
-            }
-            return $row;
-        }, $data['scormData']['scos']);
 
-        return array_merge($data, ['scormData' => $scormData]);
+                $this->removeRecursionFromChildren($row->scoChildren);
+            }
+        }
+
+        return $data;
     }
 
     public function parseScormArchive(UploadedFile $file): array
@@ -160,7 +168,7 @@ class ScormService implements ScormServiceContract
         return $data;
     }
 
-    public function deleteScormData($model)
+    public function deleteScormData($model): void
     {
         // Delete after the previous item is stored
         if ($model) {

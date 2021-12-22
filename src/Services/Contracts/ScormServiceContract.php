@@ -10,11 +10,11 @@ use Peopleaps\Scorm\Model\ScormScoModel;
 interface ScormServiceContract
 {
     public function uploadScormArchive(UploadedFile $file): array;
-    public function removeRecursion($data);
+    public function removeRecursion(array $data): array;
     public function parseScormArchive(UploadedFile $file);
-    public function deleteScormData($model);
-    public function getScos($scormId);
-    public function getScoByUuid($scoUuid);
+    public function deleteScormData($model): void;
+    public function getScos($scormId): ScormScoModel;
+    public function getScoByUuid($scoUuid): ScormScoModel;
     public function getScoViewDataByUuid($scoUuid): ScormScoModel;
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator;
 }
