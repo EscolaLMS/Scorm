@@ -12,4 +12,5 @@ Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api']], func
 
 Route::group(['prefix' => 'api/scorm'], function () {
     Route::get('/play/{uuid}', [ScormController::class, "show"]);
+    Route::post('/track', fn () => true); // TODO not implemented
 });

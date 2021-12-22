@@ -286,14 +286,14 @@ class ScormService implements ScormServiceContract
      * @param $scoUuid
      * @return array
      */
-    public function getScoViewDataByUuid($scoUuid): array
+    public function getScoViewDataByUuid($scoUuid): ScormScoModel
     {
         $data = $this->getScoByUuid($scoUuid);
 
         $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
         $data['player'] = (object)[
-            'lmsCommitUrl' => '/api/lms',
+            'lmsCommitUrl' => '/api/scorm/track',
             'logLevel' => 1,
             'autoProgress' => true,
             'cmi' => [] // cmi is user progress

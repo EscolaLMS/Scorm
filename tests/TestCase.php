@@ -22,6 +22,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
     {
         parent::setUp();
         $this->seed(PermissionTableSeeder::class);
+        $this->authenticateAsAdmin();
     }
 
     protected function getPackageProviders($app): array
@@ -52,9 +53,8 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
     protected function authenticateAsAdmin()
     {
         $this->user = config('auth.providers.users.model')::factory()->create();
-        
+
         $this->user->guard_name = 'api';
         $this->user->assignRole('admin');
-        
     }
 }
