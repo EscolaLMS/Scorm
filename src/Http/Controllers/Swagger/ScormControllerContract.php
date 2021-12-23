@@ -3,10 +3,12 @@
 namespace EscolaLms\Scorm\Http\Controllers\Swagger;
 
 use EscolaLms\Scorm\Http\Requests\ScormCreateRequest;
+use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
 use EscolaLms\Scorm\Http\Requests\ScormListRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Peopleaps\Scorm\Model\ScormModel;
 
 interface ScormControllerContract
 {
@@ -187,4 +189,45 @@ interface ScormControllerContract
      * @return JsonResponse
      */
     public function index(ScormListRequest $request): JsonResponse;
+
+    /**
+     * @OA\Delete(
+     *     path="/api/admin/scorm/{scorm_id}",
+     *     summary="Delete scorm package by id",
+     *     tags={"SCORM"},
+     *     security={
+     *         {"passport": {}},
+     *     },
+     *     @OA\Parameter(
+     *         description="Scorm package id",
+     *         in="path",
+     *         name="scorm_id",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="number"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="",
+     *      ),
+     *     @OA\Response(
+     *          response=401,
+     *          description="endpoint requires authentication",
+     *     ),
+     *     @OA\Response(
+     *          response=403,
+     *          description="user doesn't have required access rights",
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="server-side error",
+     *      ),
+     * )
+     *
+     * @param ScormDeleteRequest $request
+     * @param ScormModel $scormModel
+     * @return JsonResponse
+     */
+    public function delete(ScormDeleteRequest $request, ScormModel $scormModel): JsonResponse;
 }
