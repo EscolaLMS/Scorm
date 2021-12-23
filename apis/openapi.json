@@ -177,6 +177,45 @@
                     }
                 ]
             }
+        },
+        "/api/admin/scorm/{scorm_id}": {
+            "delete": {
+                "tags": [
+                    "SCORM"
+                ],
+                "summary": "Delete scorm package by id",
+                "operationId": "9071dc5be32921c5bf43043a3a1ee415",
+                "parameters": [
+                    {
+                        "name": "scorm_id",
+                        "in": "path",
+                        "description": "Scorm package id",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "endpoint requires authentication"
+                    },
+                    "403": {
+                        "description": "user doesn't have required access rights"
+                    },
+                    "500": {
+                        "description": "server-side error"
+                    }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
+            }
         }
     }
 }
