@@ -5,6 +5,7 @@ namespace EscolaLms\Scorm\Services\Contracts;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
+use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
 
 interface ScormServiceContract
@@ -12,7 +13,7 @@ interface ScormServiceContract
     public function uploadScormArchive(UploadedFile $file): array;
     public function removeRecursion(array $data): array;
     public function parseScormArchive(UploadedFile $file);
-    public function deleteScormData($model): void;
+    public function deleteScormData(ScormModel $model): void;
     public function getScos($scormId): ScormScoModel;
     public function getScoByUuid($scoUuid): ScormScoModel;
     public function getScoViewDataByUuid($scoUuid): ScormScoModel;
