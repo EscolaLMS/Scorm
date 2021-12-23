@@ -168,10 +168,10 @@ class ScormService implements ScormServiceContract
         return $data;
     }
 
-    public function deleteScormData($model): void
+    public function deleteScormData(ScormModel $model): void
     {
         // Delete after the previous item is stored
-        if ($model) {
+        if ($model->exists) {
             $oldScos = $model->scos()->get();
 
             // Delete all tracking associate with sco
@@ -183,17 +183,19 @@ class ScormService implements ScormServiceContract
             $model->delete(); // delete scorm
 
             // Delete folder from server
-            $this->deleteScormFolder($model->hash_name);
+            $this->deleteScormFolder($model->version, $model->hash_name);
         }
     }
 
     /**
-     * @param $folderHashedName
+     * @param string $version
+     * @param string $folderHashedName
      * @return bool
      */
-    protected function deleteScormFolder($folderHashedName): bool
+    protected function deleteScormFolder(string $version, string $folderHashedName): bool
     {
-        return Storage::disk('scorm')->deleteDirectory($folderHashedName);
+        return Storage::disk(config('scorm.disk'))
+            ->deleteDirectory('scorm' . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . $folderHashedName);
     }
 
     /**
@@ -202,7 +204,7 @@ class ScormService implements ScormServiceContract
      * @param string $hashName name of the destination directory
      * @throws StorageNotFoundException
      */
-    private function unzipScormArchive(UploadedFile $file, $hashName): void
+    private function unzipScormArchive(UploadedFile $file, string $hashName): void
     {
         $zip = new \ZipArchive();
         $zip->open($file);

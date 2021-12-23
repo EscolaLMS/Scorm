@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 
 class ScormAdminApiTest extends TestCase
@@ -54,6 +55,27 @@ class ScormAdminApiTest extends TestCase
         $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
     }
 
+    public function test_delete_scorm()
+    {
+        $response = $this->uploadScorm();
+        $data = $response->getData();
+        $scormData = $data->data->scormData;
+        $model = $data->data->model;
+        $path = 'scorm' . DIRECTORY_SEPARATOR . $scormData->version . DIRECTORY_SEPARATOR . $scormData->hashName;
+
+        $response = $this->actingAs($this->user, 'api')->json('DELETE', '/api/admin/scorm/' . $model->id);
+
+        $response->assertStatus(200);
+        $this->assertFalse(Storage::disk(config('scorm.disk'))->exists($path));
+        $this->assertDatabaseMissing('scorm', [
+            'id' => $model->id,
+            'uuid' => $model->uuid,
+        ]);
+        $this->assertDatabaseMissing('scorm_sco', [
+            'uuid' => $scormData->scos[0]->uuid,
+        ]);
+    }
+
     public function test_get_model_list()
     {
         $response = $this->uploadScorm();
@@ -90,15 +112,14 @@ class ScormAdminApiTest extends TestCase
         ]);
     }
 
-    private function getUploadScormFile(): UploadedFile
+    private function getUploadScormFile($fileName = '1.zip'): UploadedFile
     {
         // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
-        $filename = '1.zip';
-        $filepath = realpath(__DIR__ . '/../../database/mocks/' . $filename);
-        $storage_path = storage_path($filename);
+        $filepath = realpath(__DIR__ . '/../../database/mocks/' . $fileName);
+        $storagePath = storage_path($fileName);
 
-        copy($filepath, $storage_path);
+        copy($filepath, $storagePath);
 
-        return new UploadedFile($storage_path, $filename, 'application/zip', null, true);
+        return new UploadedFile($storagePath, $fileName, 'application/zip', null, true);
     }
 }

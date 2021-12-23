@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Http\Controllers;
 
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormControllerContract;
+use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
 use Exception;
@@ -11,6 +12,7 @@ use EscolaLms\Scorm\Http\Requests\ScormListRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Peopleaps\Scorm\Model\ScormModel;
 
 class ScormController extends EscolaLmsBaseController implements ScormControllerContract
 {
@@ -57,5 +59,11 @@ class ScormController extends EscolaLmsBaseController implements ScormController
     {
         $list = $this->service->listModels($request->get('per_page'));
         return $this->sendResponse($list, "Scorm list fetched successfully");
+    }
+
+    public function delete(ScormDeleteRequest $request, ScormModel $scormModel): JsonResponse
+    {
+        $this->service->deleteScormData($scormModel);
+        return $this->sendSuccess("Scorm Package deleted successfully");
     }
 }
