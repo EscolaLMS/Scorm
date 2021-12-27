@@ -16,6 +16,6 @@ interface ScormServiceContract
     public function deleteScormData(ScormModel $model): void;
     public function getScos($scormId): ScormScoModel;
     public function getScoByUuid($scoUuid): ScormScoModel;
-    public function getScoViewDataByUuid($scoUuid): ScormScoModel;
+    public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel;
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator;
 }

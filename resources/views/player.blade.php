@@ -9,7 +9,11 @@
     html,body,iframe { width: 100%; height: 100%; padding: 0; margin: 0; border: none}
   </style>
   <script type="text/javascript">
-    let settings = @json($data);
+    const settings = @json($data);
+    const token = settings.token;
+
+    // console.log(token);
+
     if (settings.version === 'scorm_12') {
         scorm12();
     }
@@ -19,6 +23,8 @@
 
     function scorm12() {
         window.API = new Scorm12API(settings.player);
+        window.API.loadFromJSON(settings.player.cmi);
+
         console.log(window.API);
 
         window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
@@ -29,9 +35,11 @@
 
     function scorm2004() {
         window.API_1484_11 = new Scorm2004API(settings.player);
+        window.API_1484_11.loadFromJSON(settings.player.cmi);
+
         console.log(window.API_1484_11);
 
-        window.API_1484_11.on("SetValue.cmi.* ", function(CMIElement, value) {
+        window.API_1484_11.on('SetValue.cmi.*', function(CMIElement, value) {
             console.log(arguments);
         });
     }

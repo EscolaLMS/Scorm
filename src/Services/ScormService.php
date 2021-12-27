@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Services;
 
 use DOMDocument;
+use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +11,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Peopleaps\Scorm\Entity\Scorm;
+use Peopleaps\Scorm\Entity\ScoTracking;
 use Peopleaps\Scorm\Exception\InvalidScormArchiveException;
 use Peopleaps\Scorm\Exception\StorageNotFoundException;
 use Peopleaps\Scorm\Library\ScormLib;
 use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
+use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 use Ramsey\Uuid\Uuid;
 use ZipArchive;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
@@ -25,12 +28,18 @@ class ScormService implements ScormServiceContract
     /** @var ScormLib */
     private ScormLib $scormLib;
 
+    /** @var ScormTrackServiceContract */
+    private ScormTrackServiceContract $scormTrackService;
+
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(
+        ScormTrackServiceContract $scormTrackService
+    )
     {
         $this->scormLib = new ScormLib();
+        $this->scormTrackService = $scormTrackService;
     }
 
     public function uploadScormArchive(UploadedFile $file): array
@@ -293,20 +302,27 @@ class ScormService implements ScormServiceContract
 
     /**
      * Get sco data to view by uuid
-     * @param $scoUuid
-     * @return array
+     * @param string $scoUuid
+     * @param int|null $userId
+     * @param string|null $token
+     * @return ScormScoModel
      */
-    public function getScoViewDataByUuid($scoUuid): ScormScoModel
+    public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel
     {
         $data = $this->getScoByUuid($scoUuid);
+        $cmi = $this->getCmiData(
+            $data->scorm->version,
+            $this->createScormTrack($scoUuid, $userId)
+        );
 
         $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
+        $data['token'] = $token;
         $data['player'] = (object)[
             'lmsCommitUrl' => '/api/scorm/track',
             'logLevel' => 1,
             'autoProgress' => true,
-            'cmi' => [] // cmi is user progress
+            'cmi' => $cmi
         ];
 
         return $data;
@@ -317,5 +333,62 @@ class ScormService implements ScormServiceContract
         return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
             ->select($columns)
             ->paginate(intval($per_page));
+    }
+
+    private function createScormTrack(string $uuid, ?int $userId): ?ScoTracking
+    {
+        if (is_null($userId)) {
+            return null;
+        }
+
+        return $this->scormTrackService->createScoTracking($uuid, $userId);
+    }
+
+    private function getCmiData(string $version, ?ScoTracking $track = null): array
+    {
+        if (is_null($track)) {
+            return [];
+        }
+
+        switch ($version) {
+            case Scorm::SCORM_12:
+                return [
+                    'suspend_data' => $track->getSuspendData(),
+                    'core.student_id' => $track->getUserId(),
+                    'core.location_location' => $track->getLessonLocation(),
+                    'core.credit' => $track->getCredit(),
+                    'core.lesson_status' => $track->getLessonStatus(),
+                    'core.entry' => $track->getEntry(),
+                    'core.lesson_mode' => $track->getLessonMode(),
+                    'core.exit' => $track->getExitMode(),
+                    'core.session_time' => $track->getSessionTime(),
+                    'core.score.raw' => $track->getScoreRaw(),
+                    'core.score.min' => $track->getScoreMin(),
+                    'core.score.max' => $track->getScoreMax(),
+                    'core.total_time' => $track->getTotalTime($version),
+
+                ];
+            case Scorm::SCORM_2004:
+                return [
+                    'learner_id' => $track->getUserId(),
+                    'progress_measure' => $track->getProgression(), // TODO
+                    'score.raw' => $track->getScoreRaw(),
+                    'score.min' => $track->getScoreMin(),
+                    'score.max' => $track->getScoreMax(),
+                    'score.scaled' => $track->getScoreScaled(),
+                    'success_status' => $track->getLessonStatus(),
+                    'completion_status' => $track->getCompletionStatus(),
+                    'session_time' => $track->getSessionTime(),
+                    'total_time' => $track->getTotalTime($version),
+                    'entry' => $track->getEntry(),
+                    'suspend_data' => $track->getSuspendData(),
+                    'credit' => $track->getCredit(),
+                    'exit' => $track->getExitMode(),
+                    'location' => $track->getLessonLocation(),
+                    'mode' => $track->getLessonMode(),
+                ];
+            default:
+                return [];
+        }
     }
 }

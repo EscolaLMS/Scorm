@@ -2,6 +2,7 @@
 
 use EscolaLms\Scorm\Http\Controllers\ScormController;
 
+use EscolaLms\Scorm\Http\Controllers\ScormTrackController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api', 'bindings']], function () {
@@ -13,5 +14,10 @@ Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api', 'bindi
 
 Route::group(['prefix' => 'api/scorm'], function () {
     Route::get('/play/{uuid}', [ScormController::class, "show"]);
-    Route::post('/track', fn () => true); // TODO not implemented
+
+    Route::group(['prefix' => '/track', 'middleware' => ['auth:api', 'bindings']], function () {
+        Route::post('/{scormSco}', [ScormTrackController::class, 'set']); // TODO not implemented
+        Route::get('/{scormSco}', [ScormTrackController::class, 'get']); // TODO not implemented
+        Route::post('/commit', [ScormTrackController::class, 'commit']); // TODO not implemented
+    });
 });
