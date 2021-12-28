@@ -4,13 +4,15 @@ namespace EscolaLms\Scorm\Http\Controllers\Swagger;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Peopleaps\Scorm\Model\ScormScoModel;
 
+/**
+ * TODO swagger
+ */
 interface ScormTrackControllerContract
 {
-    public function set(Request $request, ScormScoModel $scormSco): JsonResponse;
+    public function set(Request $request, string $uuid): JsonResponse;
 
-    public function get(Request $request, ScormScoModel $scormSco): JsonResponse;
+    public function get(Request $request, string $uuid): JsonResponse;
 
-    public function commit(Request $request): JsonResponse;
+    public function commit(Request $request, string $uuid): JsonResponse;
 }

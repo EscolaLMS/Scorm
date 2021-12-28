@@ -11,8 +11,9 @@
   <script type="text/javascript">
     const settings = @json($data);
     const token = settings.token;
+    const cmi = settings.player.cmi;
 
-    // console.log(token);
+    console.log(settings);
 
     if (settings.version === 'scorm_12') {
         scorm12();
@@ -23,25 +24,53 @@
 
     function scorm12() {
         window.API = new Scorm12API(settings.player);
-        window.API.loadFromJSON(settings.player.cmi);
+        window.API.loadFromJSON(cmi);
 
         console.log(window.API);
 
         window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
-            // TODO push this data though post message
-            console.log(arguments);
+            const data = {
+                cmi: {
+                    [CMIElement]: value
+                }
+            }
+
+            post(data);
         });
     }
 
     function scorm2004() {
         window.API_1484_11 = new Scorm2004API(settings.player);
-        window.API_1484_11.loadFromJSON(settings.player.cmi);
-
-        console.log(window.API_1484_11);
+        window.API_1484_11.loadFromJSON(cmi);
 
         window.API_1484_11.on('SetValue.cmi.*', function(CMIElement, value) {
+            const data = {
+                cmi: {
+                    [CMIElement]: value
+                }
+            }
+
+            post(data);
+        });
+
+        window.API_1484_11.on('GetValue.cmi.*', function(CMIElement, value) {
             console.log(arguments);
         });
+    }
+
+    function post(data) {
+        fetch(settings.lmsUrl, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                console.log(res);
+            })
     }
 
   </script>

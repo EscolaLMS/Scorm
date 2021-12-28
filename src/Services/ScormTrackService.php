@@ -144,6 +144,9 @@ class ScormTrackService implements ScormTrackServiceContract
         $tracking->setLatestDate(Carbon::now());
         $sco = $tracking->getSco();
         $scorm = ScormModel::where('id', $sco['scorm_id'])->firstOrFail();
+        $updateResult = ScormScoTrackingModel::where('user_id', $tracking->getUserId())
+            ->where('sco_id', $sco['id'])
+            ->firstOrFail();
 
         $statusPriority = [
             'unknown' => 0,
@@ -169,14 +172,19 @@ class ScormTrackService implements ScormTrackServiceContract
                 $sessionTimeInHundredth = $this->convertTimeInHundredth($sessionTime);
                 $progression = isset($data['cmi.progress_measure']) ? floatval($data['cmi.progress_measure']) : 0;
 
+                $entry = $data['cmi.core.entry'] ?? $updateResult->entry;
+                $exit = $data['cmi.core.exit'] ?? $updateResult->exit;
+                $lessonLocation = $data['cmi.core.lesson_location'] ?? $updateResult->lesson_location;
+                $totalTime = $data['cmi.core.total_time'] ?? 0;
+
                 $tracking->setDetails($data);
-                $tracking->setEntry($data['cmi.core.entry']);
-                $tracking->setExitMode($data['cmi.core.exit']);
-                $tracking->setLessonLocation($data['cmi.core.lesson_location']);
+                $tracking->setEntry($entry);
+                $tracking->setExitMode($exit);
+                $tracking->setLessonLocation($lessonLocation);
                 $tracking->setSessionTime($sessionTimeInHundredth);
 
                 // Compute total time
-                $totalTimeInHundredth = $this->convertTimeInHundredth($data['cmi.core.total_time']);
+                $totalTimeInHundredth = $this->convertTimeInHundredth($totalTime);
                 $totalTimeInHundredth += $sessionTimeInHundredth;
 
                 // Persist total time
@@ -229,6 +237,7 @@ class ScormTrackService implements ScormTrackServiceContract
                 $scoreMax = isset($data['cmi.score.max']) ? intval($data['cmi.score.max']) : null;
                 $scoreScaled = isset($data['cmi.score.scaled']) ? floatval($data['cmi.score.scaled']) : null;
                 $progression = isset($data['cmi.progress_measure']) ? floatval($data['cmi.progress_measure']) : 0;
+                $location = $data['cmi.location'] ?? null;
                 $bestScore = $tracking->getScoreRaw();
 
                 // Computes total time
@@ -285,12 +294,10 @@ class ScormTrackService implements ScormTrackServiceContract
                     $tracking->setProgression($progression);
                 }
 
+                $tracking->setLessonLocation($location);
+
                 break;
         }
-
-        $updateResult = ScormScoTrackingModel::where('user_id', $tracking->getUserId())
-            ->where('sco_id', $sco['id'])
-            ->firstOrFail();
 
         $updateResult->progression = $tracking->getProgression();
         $updateResult->score_raw = $tracking->getScoreRaw();

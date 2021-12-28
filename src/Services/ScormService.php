@@ -318,8 +318,13 @@ class ScormService implements ScormServiceContract
         $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
+        $data['lmsUrl'] = url('/api/scorm/track/' . $data->uuid);
         $data['player'] = (object)[
-            'lmsCommitUrl' => '/api/scorm/track',
+            'lmsCommitUrl' => '/api/scorm/track/commit/' . $data->uuid,
+            'xhrWithCredentials' => true, // TODO
+            'xhrHeaders' => [
+                'Authorization' => 'Bearer ' . $token // TODO
+            ],
             'logLevel' => 1,
             'autoProgress' => true,
             'cmi' => $cmi
@@ -354,24 +359,24 @@ class ScormService implements ScormServiceContract
             case Scorm::SCORM_12:
                 return [
                     'suspend_data' => $track->getSuspendData(),
+                    // 'progress_measure' => strval($track->getProgression() / 100),
                     'core.student_id' => $track->getUserId(),
-                    'core.location_location' => $track->getLessonLocation(),
+                    'core.lesson_location' => $track->getLessonLocation(),
                     'core.credit' => $track->getCredit(),
                     'core.lesson_status' => $track->getLessonStatus(),
                     'core.entry' => $track->getEntry(),
                     'core.lesson_mode' => $track->getLessonMode(),
                     'core.exit' => $track->getExitMode(),
                     'core.session_time' => $track->getSessionTime(),
-                    'core.score.raw' => $track->getScoreRaw(),
-                    'core.score.min' => $track->getScoreMin(),
-                    'core.score.max' => $track->getScoreMax(),
+                    // 'core.score.raw' => strval($track->getScoreRaw()),
+                    'core.score.min' => strval($track->getScoreMin()),
+                    'core.score.max' => strval($track->getScoreMax()),
                     'core.total_time' => $track->getTotalTime($version),
-
                 ];
             case Scorm::SCORM_2004:
                 return [
                     'learner_id' => $track->getUserId(),
-                    'progress_measure' => $track->getProgression(), // TODO
+                    'progress_measure' => strval($track->getProgression() / 100),
                     'score.raw' => $track->getScoreRaw(),
                     'score.min' => $track->getScoreMin(),
                     'score.max' => $track->getScoreMax(),

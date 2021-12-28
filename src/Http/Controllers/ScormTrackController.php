@@ -7,7 +7,6 @@ use EscolaLms\Scorm\Http\Controllers\Swagger\ScormTrackControllerContract;
 use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormTrackController extends EscolaLmsBaseController implements ScormTrackControllerContract
 {
@@ -19,21 +18,32 @@ class ScormTrackController extends EscolaLmsBaseController implements ScormTrack
         $this->scormTrackService = $scormTrackService;
     }
 
-    public function set(Request $request, ScormScoModel $scormSco): JsonResponse
+    public function set(Request $request, string $uuid): JsonResponse
     {
-        // TODO
+        $this->scormTrackService->updateScoTracking(
+            $uuid,
+            $request->user()->getKey(),
+            $request->input('cmi')
+        );
+
         return $this->sendSuccess();
     }
 
-    public function get(Request $request, ScormScoModel $scormSco): JsonResponse
+    public function get(Request $request, string $uuid): JsonResponse
     {
-        // TODO
-        return new JsonResponse();
+        // TODO map values by scorm version
+        $data = $this->scormTrackService->getUserResult($uuid, $request->user()->getKey());
+        return new JsonResponse($data);
     }
 
-    public function commit(Request $request): JsonResponse
+    public function commit(Request $request, string $uuid): JsonResponse
     {
-        // TODO
-        return new JsonResponse();
+        $this->scormTrackService->updateScoTracking(
+            $uuid,
+            $request->user()->getKey(),
+            $request->input('cmi')
+        );
+
+        return $this->sendSuccess();
     }
 }

@@ -16,8 +16,8 @@ Route::group(['prefix' => 'api/scorm'], function () {
     Route::get('/play/{uuid}', [ScormController::class, "show"]);
 
     Route::group(['prefix' => '/track', 'middleware' => ['auth:api', 'bindings']], function () {
-        Route::post('/{scormSco}', [ScormTrackController::class, 'set']); // TODO not implemented
-        Route::get('/{scormSco}', [ScormTrackController::class, 'get']); // TODO not implemented
-        Route::post('/commit', [ScormTrackController::class, 'commit']); // TODO not implemented
+        Route::post('/{uuid}', [ScormTrackController::class, 'set']);
+        Route::get('/{uuid}', [ScormTrackController::class, 'get']);
+        Route::post('/commit/{uuid}', [ScormTrackController::class, 'commit']);
     });
 });
