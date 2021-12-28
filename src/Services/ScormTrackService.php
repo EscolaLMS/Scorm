@@ -14,9 +14,60 @@ use Ramsey\Uuid\Uuid;
 
 class ScormTrackService implements ScormTrackServiceContract
 {
-    public function getUserResult($scoId, $userId)
+    private const KEYS = [
+        Scorm::SCORM_12 => [
+            'cmi.progress_measure' => 'progression',
+            'cmi.core.score.raw' => 'score_raw',
+            'cmi.core.score.min' => 'score_min',
+            'cmi.core.score.max' => 'score_max',
+            // '' => 'score_scaled',
+            'cmi.core.lesson_status' => 'lesson_status',
+            // '' => 'completion_status',
+            'cmi.core.session_time' => 'session_time',
+            'cmi.core.total_time' => 'total_time_int',
+            'cmi.core.entry' => 'entry',
+            'cmi.suspend_data' => 'suspend_data',
+            'cmi.core.credit' => 'credit',
+            'cmi.core.exit' => 'exit_mode',
+            'cmi.core.lesson_location' => 'lesson_location',
+            'cmi.core.lesson_mode' => 'lesson_mode',
+        ],
+        Scorm::SCORM_2004 => [
+            'cmi.progress_measure' => 'progression',
+            'cmi.score.raw' => 'score_raw',
+            'cmi.score.min' => 'score_min',
+            'cmi.score.max' => 'score_max',
+            'cmi.score.scaled' => 'score_scaled',
+            'cmi.success_status' => 'lesson_status',
+            'cmi.completion_status' => 'completion_status',
+            'cmi.session_time' => 'session_time',
+            'cmi.total_time' => 'total_time_string',
+            'cmi.entry' => 'entry',
+            'cmi.suspend_data' => 'suspend_data',
+            'cmi.credit' => 'credit',
+            'cmi.exit' => 'exit_mode',
+            'cmi.location' => 'lesson_location',
+            'cmi.mode' => 'lesson_mode',
+        ],
+    ];
+
+    public function getUserResult(int $scoId, int $userId): ScormScoTrackingModel
     {
-        return ScormScoTrackingModel::where('sco_id', $scoId)->where('user_id', $userId)->first();
+        return ScormScoTrackingModel::where('sco_id', $scoId)
+            ->with('sco.scorm')
+            ->where('user_id', $userId)->first();
+    }
+
+    public function getUserResultSpecifiedValue(string $key, int $scoId, int $userId)
+    {
+        $scormScoTracking = $this->getUserResult($scoId, $userId);
+        $version = $scormScoTracking->sco->scorm->version;
+
+        if (!array_key_exists($version, self::KEYS) || !array_key_exists($key, self::KEYS[$version])) {
+            return null;
+        }
+
+        return $scormScoTracking->{self::KEYS[$version][$key]};
     }
 
     public function createScoTracking($scoUuid, $userId = null)

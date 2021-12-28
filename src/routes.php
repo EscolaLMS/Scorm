@@ -17,6 +17,6 @@ Route::group(['prefix' => 'api/scorm'], function () {
 
     Route::group(['prefix' => '/track', 'middleware' => ['auth:api', 'bindings']], function () {
         Route::post('/{uuid}', [ScormTrackController::class, 'set']);
-        Route::get('/{uuid}', [ScormTrackController::class, 'get']);
+        Route::get('/{scoId}/{key}', [ScormTrackController::class, 'get']);
     });
 });

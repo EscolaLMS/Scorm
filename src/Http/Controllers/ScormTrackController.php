@@ -29,10 +29,9 @@ class ScormTrackController extends EscolaLmsBaseController implements ScormTrack
         return $this->sendSuccess();
     }
 
-    public function get(Request $request, string $uuid): JsonResponse
+    public function get(Request $request, int $scoId, string $key): JsonResponse
     {
-        // TODO map values by scorm version
-        $data = $this->scormTrackService->getUserResult($uuid, $request->user()->getKey());
+        $data = $this->scormTrackService->getUserResultSpecifiedValue($key, $scoId, $request->user()->getKey());
         return new JsonResponse($data);
     }
 }

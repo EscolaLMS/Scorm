@@ -58,7 +58,26 @@ class ScormTrackApiTest extends TestCase
         ]);
     }
 
-    public function test_get_track_scorm()
+    /**
+     * @dataProvider scormDataProvider
+     */
+    public function test_get_track_scorm($fileName, $payload)
     {
+        $this->authenticateAsAdmin();
+        $response = $this->uploadScorm($fileName);
+        $data = $response->getData();
+        $scos = $data->data->scormData->scos[0];
+        $scormSco = ScormScoModel::where('uuid', $scos->uuid)->first();
+        $key = array_keys($payload['cmi'])[0];
+
+        $this->actingAs($this->user, 'api')
+            ->json('POST', '/api/scorm/track/' . $scormSco->uuid, $payload)
+            ->assertStatus(200);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->json('GET', '/api/scorm/track/' . $scormSco->getKey() . '/' . $key)
+            ->assertStatus(200);
+
+        $this->assertEquals($payload['cmi'][$key], $response->getData());
     }
 }

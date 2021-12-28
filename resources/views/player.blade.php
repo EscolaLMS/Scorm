@@ -66,7 +66,7 @@
             post(data);
         });
 
-        window.API_1484_11.on('GetValue.cmi.*', function(CMIElement, value) {
+        window.API_1484_11.on('GetValue.cmi.*', function(CMIElement) {
             // TODO
             console.log(arguments);
         });
@@ -81,7 +81,7 @@
     }
 
     function post(data) {
-        fetch(settings.lmsUrl, {
+        fetch(settings.lmsUrl + '/' + settings.uuid, {
             method: 'POST',
             mode: 'cors',
             headers: {
