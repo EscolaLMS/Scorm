@@ -319,12 +319,9 @@ class ScormService implements ScormServiceContract
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
         $data['lmsUrl'] = url('/api/scorm/track/' . $data->uuid);
+
         $data['player'] = (object)[
-            'lmsCommitUrl' => '/api/scorm/track/commit/' . $data->uuid,
-            'xhrWithCredentials' => true, // TODO
-            'xhrHeaders' => [
-                'Authorization' => 'Bearer ' . $token // TODO
-            ],
+            'lmsCommitUrl' => ' ',
             'logLevel' => 1,
             'autoProgress' => true,
             'cmi' => $cmi
@@ -367,7 +364,7 @@ class ScormService implements ScormServiceContract
                     'core.entry' => $track->getEntry(),
                     'core.lesson_mode' => $track->getLessonMode(),
                     'core.exit' => $track->getExitMode(),
-                    'core.session_time' => $track->getSessionTime(),
+                    // 'core.session_time' => $track->getSessionTime(),
                     // 'core.score.raw' => strval($track->getScoreRaw()),
                     'core.score.min' => strval($track->getScoreMin()),
                     'core.score.max' => strval($track->getScoreMax()),

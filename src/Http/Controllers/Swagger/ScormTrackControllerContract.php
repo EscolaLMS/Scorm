@@ -13,6 +13,4 @@ interface ScormTrackControllerContract
     public function set(Request $request, string $uuid): JsonResponse;
 
     public function get(Request $request, string $uuid): JsonResponse;
-
-    public function commit(Request $request, string $uuid): JsonResponse;
 }

@@ -35,15 +35,4 @@ class ScormTrackController extends EscolaLmsBaseController implements ScormTrack
         $data = $this->scormTrackService->getUserResult($uuid, $request->user()->getKey());
         return new JsonResponse($data);
     }
-
-    public function commit(Request $request, string $uuid): JsonResponse
-    {
-        $this->scormTrackService->updateScoTracking(
-            $uuid,
-            $request->user()->getKey(),
-            $request->input('cmi')
-        );
-
-        return $this->sendSuccess();
-    }
 }

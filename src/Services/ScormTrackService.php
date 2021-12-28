@@ -237,7 +237,7 @@ class ScormTrackService implements ScormTrackServiceContract
                 $scoreMax = isset($data['cmi.score.max']) ? intval($data['cmi.score.max']) : null;
                 $scoreScaled = isset($data['cmi.score.scaled']) ? floatval($data['cmi.score.scaled']) : null;
                 $progression = isset($data['cmi.progress_measure']) ? floatval($data['cmi.progress_measure']) : 0;
-                $location = $data['cmi.location'] ?? null;
+                $location = $data['cmi.location'] ?? $updateResult->lesson_location;
                 $bestScore = $tracking->getScoreRaw();
 
                 // Computes total time

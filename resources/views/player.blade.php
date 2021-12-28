@@ -37,6 +37,19 @@
 
             post(data);
         });
+
+        window.API.on('LMSGetValue.cmi.*', function(CMIElement, value) {
+            // TODO
+            console.log(arguments);
+        });
+
+        window.API.on('LMSCommit', function() {
+            const data = {
+                cmi: window.API.cmi
+            }
+
+            post(data);
+        });
     }
 
     function scorm2004() {
@@ -54,7 +67,16 @@
         });
 
         window.API_1484_11.on('GetValue.cmi.*', function(CMIElement, value) {
+            // TODO
             console.log(arguments);
+        });
+
+        window.API_1484_11.on('Commit', function() {
+            const data = {
+                cmi: window.API_1484_11.cmi
+            }
+
+            post(data);
         });
     }
 
@@ -67,10 +89,7 @@
                 'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(data)
-        })
-            .then(res => {
-                console.log(res);
-            })
+        });
     }
 
   </script>
