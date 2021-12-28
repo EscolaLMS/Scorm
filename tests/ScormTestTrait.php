@@ -19,7 +19,7 @@ trait ScormTestTrait
     protected function getUploadScormFile($fileName = '1.zip'): UploadedFile
     {
         // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
-        $filepath = realpath(__DIR__ . '/../../database/mocks/' . $fileName);
+        $filepath = realpath(__DIR__ . '/../database/mocks/' . $fileName);
         $storagePath = storage_path($fileName);
 
         copy($filepath, $storagePath);
