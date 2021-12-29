@@ -9,7 +9,7 @@ use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 
 interface ScormTrackServiceContract
 {
-    public function getUserResult(int $scoId, int $userId): ScormScoTrackingModel;
+    public function getUserResult(int $scoId, int $userId): ?ScormScoTrackingModel;
     public function getUserResultSpecifiedValue(string $key, int $scoId, int $userId);
     public function createScoTracking($scoUuid, $userId = null);
     public function findScoTrackingId($scoUuid, $scoTrackingUuid);

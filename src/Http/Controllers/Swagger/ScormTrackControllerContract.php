@@ -2,6 +2,8 @@
 
 namespace EscolaLms\Scorm\Http\Controllers\Swagger;
 
+use EscolaLms\Scorm\Http\Requests\GetScormTrackRequest;
+use EscolaLms\Scorm\Http\Requests\SetScormTrackRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -10,7 +12,7 @@ use Illuminate\Http\Request;
  */
 interface ScormTrackControllerContract
 {
-    public function set(Request $request, string $uuid): JsonResponse;
+    public function set(SetScormTrackRequest $request, string $uuid): JsonResponse;
 
-    public function get(Request $request, int $scoId, string $key): JsonResponse;
+    public function get(GetScormTrackRequest $request, int $scoId, string $key): JsonResponse;
 }

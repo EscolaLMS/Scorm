@@ -2,10 +2,10 @@
 
 namespace EscolaLms\Scorm\Http\Requests;
 
-use EscolaLms\Core\Models\User;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ScormDeleteRequest extends FormRequest
+class SetScormTrackRequest extends FormRequest
 {
     /**
      * @return bool
@@ -14,7 +14,7 @@ class ScormDeleteRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can('delete Scorm', 'api');
+        return $user->can('get track Scorm', 'api');
     }
 
     /**

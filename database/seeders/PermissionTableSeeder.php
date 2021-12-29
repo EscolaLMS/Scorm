@@ -19,7 +19,10 @@ class PermissionTableSeeder extends Seeder
         Permission::findOrCreate('delete Scorm', 'api');
         Permission::findOrCreate('create Scorm', 'api');
 
-        $admin->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm']);
-        $tutor->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm']);
+        Permission::findOrCreate('set track Scorm', 'api');
+        Permission::findOrCreate('get track Scorm', 'api');
+
+        $admin->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm', 'set track Scorm', 'get track Scorm']);
+        $tutor->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm', 'set track Scorm', 'get track Scorm']);
     }
 }

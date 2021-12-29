@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use EscolaLms\Scorm\Tests\ScormTestTrait;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use EscolaLms\Scorm\Tests\TestCase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Peopleaps\Scorm\Entity\Scorm;
+use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormTrackApiTest extends TestCase
 {
-    use DatabaseTransactions, ScormTestTrait;
+    use DatabaseTransactions, ScormTestTrait, WithFaker;
 
     public function scormDataProvider(): array
     {
@@ -58,26 +61,78 @@ class ScormTrackApiTest extends TestCase
         ]);
     }
 
-    /**
-     * @dataProvider scormDataProvider
-     */
-    public function test_get_track_scorm($fileName, $payload)
+    public function scormGetTrackDataProvider(): array
     {
-        $this->authenticateAsAdmin();
-        $response = $this->uploadScorm($fileName);
-        $data = $response->getData();
-        $scos = $data->data->scormData->scos[0];
-        $scormSco = ScormScoModel::where('uuid', $scos->uuid)->first();
-        $key = array_keys($payload['cmi'])[0];
+        return [
+            'SCORM_12' => [
+                'version' => Scorm::SCORM_12,
+                'param' => [
+                    'key' => 'cmi.core.lesson_location',
+                    'value' => '3'
+                ]
+            ],
+            'SCORM_2004' => [
+                'version' => Scorm::SCORM_2004,
+                'param' => [
+                    'key' => 'cmi.location',
+                    'value' => '3',
+                ],
+            ],
+            'SCORM_12_INVALID' => [
+                'version' => Scorm::SCORM_12,
+                'param' => [
+                    'key' => 'cmi.invalid_key',
+                    'value' => null,
+                ]
+            ],
+            'SCORM_2004_INVALID' => [
+                'version' => Scorm::SCORM_2004,
+                'param' => [
+                    'key' => 'cmi.invalid_key',
+                    'value' => null,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider scormGetTrackDataProvider
+     */
+    public function test_get_track_scorm($version, $param)
+    {
+        $scorm = new ScormModel;
+        $scorm->uuid = $this->faker->uuid;
+        $scorm->version = $version;
+        $scorm->save();
+
+        $scormSco = new ScormScoModel;
+        $scormSco->scorm_id = $scorm->getKey();
+        $scormSco->uuid = $this->faker->uuid;
+        $scormSco->save();
 
         $this->actingAs($this->user, 'api')
-            ->json('POST', '/api/scorm/track/' . $scormSco->uuid, $payload)
+            ->json('POST', '/api/scorm/track/' . $scormSco->uuid, [
+                'cmi' => [
+                    $param['key'] => $param['value']
+                ]
+            ])
             ->assertStatus(200);
 
         $response = $this->actingAs($this->user, 'api')
-            ->json('GET', '/api/scorm/track/' . $scormSco->getKey() . '/' . $key)
-            ->assertStatus(200);
+            ->json('GET', '/api/scorm/track/' . $scormSco->getKey() . '/' . $param['key']);
 
-        $this->assertEquals($payload['cmi'][$key], $response->getData());
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment($param['value'] ? [$param['value']] : []);
+    }
+
+    public function test_get_track_not_existing_scorm()
+    {
+        $response = $this->actingAs($this->user, 'api')
+            ->json('GET', '/api/scorm/track/' . 0 . '/' . 'cmi.location');
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment([]);
     }
 }

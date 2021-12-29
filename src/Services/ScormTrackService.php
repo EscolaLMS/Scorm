@@ -4,7 +4,11 @@ namespace EscolaLms\Scorm\Services;
 
 use Carbon\Carbon;
 use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
+use EscolaLms\Scorm\Strategies\Scorm12FieldStrategy;
+use EscolaLms\Scorm\Strategies\Scorm2004FieldStrategy;
+use EscolaLms\Scorm\Strategies\ScormFieldStrategy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Peopleaps\Scorm\Entity\Scorm;
 use Peopleaps\Scorm\Entity\ScoTracking;
 use Peopleaps\Scorm\Model\ScormModel;
@@ -14,44 +18,7 @@ use Ramsey\Uuid\Uuid;
 
 class ScormTrackService implements ScormTrackServiceContract
 {
-    private const KEYS = [
-        Scorm::SCORM_12 => [
-            'cmi.progress_measure' => 'progression',
-            'cmi.core.score.raw' => 'score_raw',
-            'cmi.core.score.min' => 'score_min',
-            'cmi.core.score.max' => 'score_max',
-            // '' => 'score_scaled',
-            'cmi.core.lesson_status' => 'lesson_status',
-            // '' => 'completion_status',
-            'cmi.core.session_time' => 'session_time',
-            'cmi.core.total_time' => 'total_time_int',
-            'cmi.core.entry' => 'entry',
-            'cmi.suspend_data' => 'suspend_data',
-            'cmi.core.credit' => 'credit',
-            'cmi.core.exit' => 'exit_mode',
-            'cmi.core.lesson_location' => 'lesson_location',
-            'cmi.core.lesson_mode' => 'lesson_mode',
-        ],
-        Scorm::SCORM_2004 => [
-            'cmi.progress_measure' => 'progression',
-            'cmi.score.raw' => 'score_raw',
-            'cmi.score.min' => 'score_min',
-            'cmi.score.max' => 'score_max',
-            'cmi.score.scaled' => 'score_scaled',
-            'cmi.success_status' => 'lesson_status',
-            'cmi.completion_status' => 'completion_status',
-            'cmi.session_time' => 'session_time',
-            'cmi.total_time' => 'total_time_string',
-            'cmi.entry' => 'entry',
-            'cmi.suspend_data' => 'suspend_data',
-            'cmi.credit' => 'credit',
-            'cmi.exit' => 'exit_mode',
-            'cmi.location' => 'lesson_location',
-            'cmi.mode' => 'lesson_mode',
-        ],
-    ];
-
-    public function getUserResult(int $scoId, int $userId): ScormScoTrackingModel
+    public function getUserResult(int $scoId, int $userId): ?ScormScoTrackingModel
     {
         return ScormScoTrackingModel::where('sco_id', $scoId)
             ->with('sco.scorm')
@@ -61,13 +28,13 @@ class ScormTrackService implements ScormTrackServiceContract
     public function getUserResultSpecifiedValue(string $key, int $scoId, int $userId)
     {
         $scormScoTracking = $this->getUserResult($scoId, $userId);
-        $version = $scormScoTracking->sco->scorm->version;
 
-        if (!array_key_exists($version, self::KEYS) || !array_key_exists($key, self::KEYS[$version])) {
-            return null;
+        if (!$scormScoTracking) {
+            return '';
         }
 
-        return $scormScoTracking->{self::KEYS[$version][$key]};
+        $strategy = $this->getScormFieldStrategy($scormScoTracking->sco->scorm->version);
+        return is_null($scormScoTracking->{$strategy->getField($key)}) ? '' : $scormScoTracking->{$strategy->getField($key)};
     }
 
     public function createScoTracking($scoUuid, $userId = null)
@@ -101,6 +68,7 @@ class ScormTrackService implements ScormTrackServiceContract
                 $scoTracking->setCompletionStatus('unknown');
                 $scoTracking->setLessonStatus('unknown');
                 $scoTracking->setIsLocked(false);
+
                 break;
         }
 
@@ -215,9 +183,9 @@ class ScormTrackService implements ScormTrackServiceContract
                     $tracking->setSuspendData($data['cmi.suspend_data']);
                 }
 
-                $scoreRaw = isset($data['cmi.core.score.raw']) ? intval($data['cmi.core.score.raw']) : null;
-                $scoreMin = isset($data['cmi.core.score.min']) ? intval($data['cmi.core.score.min']) : null;
-                $scoreMax = isset($data['cmi.core.score.max']) ? intval($data['cmi.core.score.max']) : null;
+                $scoreRaw = isset($data['cmi.core.score.raw']) ? intval($data['cmi.core.score.raw']) : $updateResult->score_raw;
+                $scoreMin = isset($data['cmi.core.score.min']) ? intval($data['cmi.core.score.min']) : $updateResult->score_min;
+                $scoreMax = isset($data['cmi.core.score.max']) ? intval($data['cmi.core.score.max']) : $updateResult->score_max;
                 $lessonStatus = isset($data['cmi.core.lesson_status']) ? $data['cmi.core.lesson_status'] : 'unknown';
                 $sessionTime = isset($data['cmi.core.session_time']) ? $data['cmi.core.session_time'] : null;
                 $sessionTimeInHundredth = $this->convertTimeInHundredth($sessionTime);
@@ -283,10 +251,10 @@ class ScormTrackService implements ScormTrackServiceContract
                     'PT0S';
                 $completionStatus = isset($data['cmi.completion_status']) ? $data['cmi.completion_status'] : 'unknown';
                 $successStatus = isset($data['cmi.success_status']) ? $data['cmi.success_status'] : 'unknown';
-                $scoreRaw = isset($data['cmi.score.raw']) ? intval($data['cmi.score.raw']) : null;
-                $scoreMin = isset($data['cmi.score.min']) ? intval($data['cmi.score.min']) : null;
-                $scoreMax = isset($data['cmi.score.max']) ? intval($data['cmi.score.max']) : null;
-                $scoreScaled = isset($data['cmi.score.scaled']) ? floatval($data['cmi.score.scaled']) : null;
+                $scoreRaw = isset($data['cmi.score.raw']) ? intval($data['cmi.score.raw']) : $updateResult->score_raw;
+                $scoreMin = isset($data['cmi.score.min']) ? intval($data['cmi.score.min']) : $updateResult->score_min;
+                $scoreMax = isset($data['cmi.score.max']) ? intval($data['cmi.score.max']) : $updateResult->score_max;
+                $scoreScaled = isset($data['cmi.score.scaled']) ? floatval($data['cmi.score.scaled']) : $updateResult->score_scaled;
                 $progression = isset($data['cmi.progress_measure']) ? floatval($data['cmi.progress_measure']) : 0;
                 $location = $data['cmi.location'] ?? $updateResult->lesson_location;
                 $bestScore = $tracking->getScoreRaw();
@@ -317,7 +285,7 @@ class ScormTrackService implements ScormTrackServiceContract
                 }
 
                 // Update best success status and completion status
-                $lessonStatus = $completionStatus;
+                $lessonStatus = $successStatus;
                 if (in_array($successStatus, ['passed', 'failed'])) {
                     $lessonStatus = $successStatus;
                 }
@@ -441,5 +409,13 @@ class ScormTrackService implements ScormTrackServiceContract
         }
 
         return $formattedValue;
+    }
+
+    private function getScormFieldStrategy(string $version): ScormFieldStrategy
+    {
+        $scormVersion = Str::ucfirst(Str::camel($version));
+        $strategy = 'EscolaLms\\Scorm\\Strategies\\' . $scormVersion . 'FieldStrategy';
+
+        return new ScormFieldStrategy(new $strategy());
     }
 }

@@ -4,6 +4,8 @@ namespace EscolaLms\Scorm\Http\Controllers;
 
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormTrackControllerContract;
+use EscolaLms\Scorm\Http\Requests\GetScormTrackRequest;
+use EscolaLms\Scorm\Http\Requests\SetScormTrackRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class ScormTrackController extends EscolaLmsBaseController implements ScormTrack
         $this->scormTrackService = $scormTrackService;
     }
 
-    public function set(Request $request, string $uuid): JsonResponse
+    public function set(SetScormTrackRequest $request, string $uuid): JsonResponse
     {
         $this->scormTrackService->updateScoTracking(
             $uuid,
@@ -29,7 +31,7 @@ class ScormTrackController extends EscolaLmsBaseController implements ScormTrack
         return $this->sendSuccess();
     }
 
-    public function get(Request $request, int $scoId, string $key): JsonResponse
+    public function get(GetScormTrackRequest $request, int $scoId, string $key): JsonResponse
     {
         $data = $this->scormTrackService->getUserResultSpecifiedValue($key, $scoId, $request->user()->getKey());
         return new JsonResponse($data);

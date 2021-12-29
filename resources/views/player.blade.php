@@ -26,8 +26,6 @@
         window.API = new Scorm12API(settings.player);
         window.API.loadFromJSON(cmi);
 
-        console.log(window.API);
-
         window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
             const data = {
                 cmi: {
@@ -38,10 +36,13 @@
             post(data);
         });
 
-        window.API.on('LMSGetValue.cmi.*', function(CMIElement, value) {
-            // TODO
-            console.log(arguments);
-        });
+        // window.API.on('LMSGetValue.cmi.*', function(CMIElement) {
+        //     get(CMIElement)
+        //         .then(res => res.json())
+        //         .then(res => {
+        //             window.API.LMSSetValue(CMIElement, res)
+        //         })
+        // });
 
         window.API.on('LMSCommit', function() {
             const data = {
@@ -57,6 +58,8 @@
         window.API_1484_11.loadFromJSON(cmi);
 
         window.API_1484_11.on('SetValue.cmi.*', function(CMIElement, value) {
+            console.log('SetValue args', arguments);
+
             const data = {
                 cmi: {
                     [CMIElement]: value
@@ -66,10 +69,15 @@
             post(data);
         });
 
-        window.API_1484_11.on('GetValue.cmi.*', function(CMIElement) {
-            // TODO
-            console.log(arguments);
-        });
+        // window.API_1484_11.on('GetValue.cmi.*', function(CMIElement) {
+        //     console.log('GetValue args', arguments);
+        //
+        //     get(CMIElement)
+        //         .then(res => res.json())
+        //         .then(res => {
+        //             window.API_1484_11.SetValue(CMIElement, res)
+        //         });
+        // });
 
         window.API_1484_11.on('Commit', function() {
             const data = {
@@ -89,6 +97,17 @@
                 'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(data)
+        });
+    }
+
+    function get(key) {
+        return fetch(settings.lmsUrl + '/' + settings.scorm_id + '/' + key, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            }
         });
     }
 

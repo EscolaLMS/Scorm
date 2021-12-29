@@ -4,12 +4,14 @@ namespace EscolaLms\Scorm\Services;
 
 use DOMDocument;
 use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
+use EscolaLms\Scorm\Strategies\ScormFieldStrategy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Peopleaps\Scorm\Entity\Scorm;
 use Peopleaps\Scorm\Entity\ScoTracking;
 use Peopleaps\Scorm\Exception\InvalidScormArchiveException;
@@ -310,17 +312,18 @@ class ScormService implements ScormServiceContract
     public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel
     {
         $data = $this->getScoByUuid($scoUuid);
-        $cmi = $this->getCmiData(
-            $data->scorm->version,
-            $this->createScormTrack($scoUuid, $userId)
-        );
+        $cmi = $this
+            ->getScormFieldStrategy($data->scorm->version)
+            ->getCmiData(
+                $this->getScormTrack($data->getKey(), $userId)
+            );
 
         $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
         $data['lmsUrl'] = url('/api/scorm/track');
 
-        $data['player'] = (object)[
+        $data['player'] = (object) [
             'lmsCommitUrl' => ' ',
             'logLevel' => 1,
             'autoProgress' => true,
@@ -337,60 +340,20 @@ class ScormService implements ScormServiceContract
             ->paginate(intval($per_page));
     }
 
-    private function createScormTrack(string $uuid, ?int $userId): ?ScoTracking
+    private function getScormTrack(int $scoId, ?int $userId): ?ScormScoTrackingModel
     {
         if (is_null($userId)) {
             return null;
         }
 
-        return $this->scormTrackService->createScoTracking($uuid, $userId);
+        return $this->scormTrackService->getUserResult($scoId, $userId);
     }
 
-    private function getCmiData(string $version, ?ScoTracking $track = null): array
+    private function getScormFieldStrategy(string $version): ScormFieldStrategy
     {
-        if (is_null($track)) {
-            return [];
-        }
+        $scormVersion = Str::ucfirst(Str::camel($version));
+        $strategy = 'EscolaLms\\Scorm\\Strategies\\' . $scormVersion . 'FieldStrategy';
 
-        switch ($version) {
-            case Scorm::SCORM_12:
-                return [
-                    'suspend_data' => $track->getSuspendData(),
-                    // 'progress_measure' => strval($track->getProgression() / 100),
-                    'core.student_id' => $track->getUserId(),
-                    'core.lesson_location' => $track->getLessonLocation(),
-                    'core.credit' => $track->getCredit(),
-                    'core.lesson_status' => $track->getLessonStatus(),
-                    'core.entry' => $track->getEntry(),
-                    'core.lesson_mode' => $track->getLessonMode(),
-                    'core.exit' => $track->getExitMode(),
-                    // 'core.session_time' => $track->getSessionTime(),
-                    // 'core.score.raw' => strval($track->getScoreRaw()),
-                    'core.score.min' => strval($track->getScoreMin()),
-                    'core.score.max' => strval($track->getScoreMax()),
-                    'core.total_time' => $track->getTotalTime($version),
-                ];
-            case Scorm::SCORM_2004:
-                return [
-                    'learner_id' => $track->getUserId(),
-                    'progress_measure' => strval($track->getProgression() / 100),
-                    'score.raw' => $track->getScoreRaw(),
-                    'score.min' => $track->getScoreMin(),
-                    'score.max' => $track->getScoreMax(),
-                    'score.scaled' => $track->getScoreScaled(),
-                    'success_status' => $track->getLessonStatus(),
-                    'completion_status' => $track->getCompletionStatus(),
-                    'session_time' => $track->getSessionTime(),
-                    'total_time' => $track->getTotalTime($version),
-                    'entry' => $track->getEntry(),
-                    'suspend_data' => $track->getSuspendData(),
-                    'credit' => $track->getCredit(),
-                    'exit' => $track->getExitMode(),
-                    'location' => $track->getLessonLocation(),
-                    'mode' => $track->getLessonMode(),
-                ];
-            default:
-                return [];
-        }
+        return new ScormFieldStrategy(new $strategy());
     }
 }
