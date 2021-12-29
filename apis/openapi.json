@@ -216,6 +216,93 @@
                     }
                 ]
             }
+        },
+        "/api/scorm/track/{uuid}": {
+            "post": {
+                "tags": [
+                    "SCORM"
+                ],
+                "summary": "Track Scorm user progress",
+                "operationId": "a4529c50341778b746c279953c1bf56c",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "description": "Unique uuid scorm identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "scorm data"
+                    },
+                    "401": {
+                        "description": "endpoint requires authentication"
+                    },
+                    "403": {
+                        "description": "user doesn't have required access rights"
+                    },
+                    "500": {
+                        "description": "server-side error"
+                    }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
+            }
+        },
+        "/api/scorm/track/{scoId}/{key}": {
+            "get": {
+                "tags": [
+                    "SCORM"
+                ],
+                "summary": "Get user progress by scorm sco id and scorm data key",
+                "operationId": "14617a0fe34eda208dc8c0de4ba2a29f",
+                "parameters": [
+                    {
+                        "name": "sco_id",
+                        "in": "path",
+                        "description": "Unique scorm identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "description": "Unique scorm data key",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "endpoint requires authentication"
+                    },
+                    "403": {
+                        "description": "user doesn't have required access rights"
+                    },
+                    "500": {
+                        "description": "server-side error"
+                    }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
+            }
         }
     }
 }
