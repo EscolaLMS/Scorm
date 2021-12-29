@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
+use EscolaLms\Scorm\Tests\ScormTestTrait;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Testing\TestResponse;
 
 class ScormAdminApiTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, ScormTestTrait;
 
     public function test_content_upload()
     {
@@ -101,25 +101,5 @@ class ScormAdminApiTest extends TestCase
 
         $response = $this->actingAs($this->user, 'api')->get('/api/scorm/play/' . $data->data->scormData->scos[0]->uuid);
         $response->assertStatus(200);
-    }
-
-    private function uploadScorm(): TestResponse
-    {
-        $zipFile = $this->getUploadScormFile();
-
-        return $this->actingAs($this->user, 'api')->json('POST', '/api/admin/scorm/upload', [
-            'zip' => $zipFile,
-        ]);
-    }
-
-    private function getUploadScormFile($fileName = '1.zip'): UploadedFile
-    {
-        // packages/scorm/database/seeders/mocks/employee-health-and-wellness-sample-course-scorm12-Z_legM6C.zip
-        $filepath = realpath(__DIR__ . '/../../database/mocks/' . $fileName);
-        $storagePath = storage_path($fileName);
-
-        copy($filepath, $storagePath);
-
-        return new UploadedFile($storagePath, $fileName, 'application/zip', null, true);
     }
 }

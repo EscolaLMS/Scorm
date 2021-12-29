@@ -3,18 +3,23 @@
 namespace EscolaLms\Scorm\Services;
 
 use DOMDocument;
+use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
+use EscolaLms\Scorm\Strategies\ScormFieldStrategy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Peopleaps\Scorm\Entity\Scorm;
+use Peopleaps\Scorm\Entity\ScoTracking;
 use Peopleaps\Scorm\Exception\InvalidScormArchiveException;
 use Peopleaps\Scorm\Exception\StorageNotFoundException;
 use Peopleaps\Scorm\Library\ScormLib;
 use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
+use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 use Ramsey\Uuid\Uuid;
 use ZipArchive;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
@@ -25,12 +30,18 @@ class ScormService implements ScormServiceContract
     /** @var ScormLib */
     private ScormLib $scormLib;
 
+    /** @var ScormTrackServiceContract */
+    private ScormTrackServiceContract $scormTrackService;
+
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(
+        ScormTrackServiceContract $scormTrackService
+    )
     {
         $this->scormLib = new ScormLib();
+        $this->scormTrackService = $scormTrackService;
     }
 
     public function uploadScormArchive(UploadedFile $file): array
@@ -293,20 +304,30 @@ class ScormService implements ScormServiceContract
 
     /**
      * Get sco data to view by uuid
-     * @param $scoUuid
-     * @return array
+     * @param string $scoUuid
+     * @param int|null $userId
+     * @param string|null $token
+     * @return ScormScoModel
      */
-    public function getScoViewDataByUuid($scoUuid): ScormScoModel
+    public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel
     {
         $data = $this->getScoByUuid($scoUuid);
+        $cmi = $this
+            ->getScormFieldStrategy($data->scorm->version)
+            ->getCmiData(
+                $this->getScormTrack($data->getKey(), $userId)
+            );
 
         $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
-        $data['player'] = (object)[
-            'lmsCommitUrl' => '/api/scorm/track',
+        $data['token'] = $token;
+        $data['lmsUrl'] = url('/api/scorm/track');
+
+        $data['player'] = (object) [
+            'lmsCommitUrl' => ' ',
             'logLevel' => 1,
             'autoProgress' => true,
-            'cmi' => [] // cmi is user progress
+            'cmi' => $cmi
         ];
 
         return $data;
@@ -317,5 +338,22 @@ class ScormService implements ScormServiceContract
         return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
             ->select($columns)
             ->paginate(intval($per_page));
+    }
+
+    private function getScormTrack(int $scoId, ?int $userId): ?ScormScoTrackingModel
+    {
+        if (is_null($userId)) {
+            return null;
+        }
+
+        return $this->scormTrackService->getUserResult($scoId, $userId);
+    }
+
+    private function getScormFieldStrategy(string $version): ScormFieldStrategy
+    {
+        $scormVersion = Str::ucfirst(Str::camel($version));
+        $strategy = 'EscolaLms\\Scorm\\Strategies\\' . $scormVersion . 'FieldStrategy';
+
+        return new ScormFieldStrategy(new $strategy());
     }
 }

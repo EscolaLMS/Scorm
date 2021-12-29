@@ -20,6 +20,8 @@ class PermissionTableSeeder extends Seeder
             ScormPermissionsEnum::SCORM_CREATE,
             ScormPermissionsEnum::SCORM_UPDATE,
             ScormPermissionsEnum::SCORM_DELETE,
+            ScormPermissionsEnum::SCORM_SET_TRACK,
+            ScormPermissionsEnum::SCORM_GET_TRACK,
         ];
 
         foreach ($permissions as $permission) {

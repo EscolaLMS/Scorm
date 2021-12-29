@@ -3,8 +3,10 @@
 namespace EscolaLms\Scorm;
 
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use EscolaLms\Scorm\Services\ScormService;
 
+use EscolaLms\Scorm\Services\ScormTrackService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 
@@ -17,6 +19,7 @@ class EscolaLmsScormServiceProvider extends ServiceProvider
 {
     public $singletons = [
         ScormServiceContract::class => ScormService::class,
+        ScormTrackServiceContract::class => ScormTrackService::class,
     ];
 
     public function boot()
