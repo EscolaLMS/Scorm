@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Policies;
 
 use EscolaLms\Auth\Models\User;
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Peopleaps\Scorm\Model\ScormModel;
 
@@ -14,9 +15,9 @@ class ScormPolicy
      * @param User $user
      * @return bool
      */
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        return $user->can('create Scorm');
+        return $user->can(ScormPermissionsEnum::SCORM_CREATE);
     }
 
     /**
@@ -24,9 +25,9 @@ class ScormPolicy
      * @param ScormModel $scorm
      * @return bool
      */
-    public function delete(User $user, ScormModel $scorm)
+    public function delete(User $user, ScormModel $scorm): bool
     {
-        return $user->can('delete Scorm');
+        return $user->can(ScormPermissionsEnum::SCORM_DELETE);
     }
 
     /**
@@ -34,8 +35,8 @@ class ScormPolicy
      * @param ScormModel $scorm
      * @return bool
      */
-    public function update(User $user, ScormModel $scorm)
+    public function update(User $user, ScormModel $scorm): bool
     {
-        return $user->can('update Scorm');
+        return $user->can(ScormPermissionsEnum::SCORM_UPDATE);
     }
 }
