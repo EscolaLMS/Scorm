@@ -191,6 +191,37 @@ interface ScormControllerContract
     public function index(ScormListRequest $request): JsonResponse;
 
     /**
+     * @OA\Get(
+     *     path="/api/admin/scorm/scos",
+     *     summary="Get all scos",
+     *     tags={"SCORM"},
+     *     security={
+     *         {"passport": {}},
+     *     },
+     *     @OA\Response(
+     *         response=200,
+     *         description="",
+     *      ),
+     *     @OA\Response(
+     *          response=401,
+     *          description="endpoint requires authentication",
+     *     ),
+     *     @OA\Response(
+     *          response=403,
+     *          description="user doesn't have required access rights",
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="server-side error",
+     *      ),
+     * )
+     *
+     * @param ScormListRequest $request
+     * @return JsonResponse
+     */
+    public function getScos(ScormListRequest $request): JsonResponse;
+
+    /**
      * @OA\Delete(
      *     path="/api/admin/scorm/{scorm_id}",
      *     summary="Delete scorm package by id",

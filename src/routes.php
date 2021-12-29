@@ -10,6 +10,7 @@ Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api', 'bindi
     Route::post('/parse', [ScormController::class, "parse"]);
     Route::delete('/{scormModel}', [ScormController::class, "delete"]);
     Route::get('/', [ScormController::class, "index"]);
+    Route::get('/scos', [ScormController::class, "getScos"]);
 });
 
 Route::group(['prefix' => 'api/scorm'], function () {

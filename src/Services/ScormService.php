@@ -340,6 +340,13 @@ class ScormService implements ScormServiceContract
             ->paginate(intval($per_page));
     }
 
+    public function listScoModels(array $columns = ['*']): Collection
+    {
+        return ScormScoModel::query()
+            ->select($columns)
+            ->get();
+    }
+
     private function getScormTrack(int $scoId, ?int $userId): ?ScormScoTrackingModel
     {
         if (is_null($userId)) {
