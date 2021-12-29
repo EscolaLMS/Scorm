@@ -2,6 +2,7 @@
 
 namespace EscolaLms\Scorm\Database\Seeders;
 
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -15,14 +16,19 @@ class PermissionTableSeeder extends Seeder
         $admin = Role::findOrCreate('admin', 'api');
         $tutor = Role::findOrCreate('tutor', 'api');
 
-        Permission::findOrCreate('update Scorm', 'api');
-        Permission::findOrCreate('delete Scorm', 'api');
-        Permission::findOrCreate('create Scorm', 'api');
+        $permissions = [
+            ScormPermissionsEnum::SCORM_CREATE,
+            ScormPermissionsEnum::SCORM_UPDATE,
+            ScormPermissionsEnum::SCORM_DELETE,
+            ScormPermissionsEnum::SCORM_SET_TRACK,
+            ScormPermissionsEnum::SCORM_GET_TRACK,
+        ];
 
-        Permission::findOrCreate('set track Scorm', 'api');
-        Permission::findOrCreate('get track Scorm', 'api');
+        foreach ($permissions as $permission) {
+            Permission::findOrCreate($permission, 'api');
+        }
 
-        $admin->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm', 'set track Scorm', 'get track Scorm']);
-        $tutor->givePermissionTo(['update Scorm', 'delete Scorm', 'create Scorm', 'set track Scorm', 'get track Scorm']);
+        $admin->givePermissionTo($permissions);
+        $tutor->givePermissionTo($permissions);
     }
 }

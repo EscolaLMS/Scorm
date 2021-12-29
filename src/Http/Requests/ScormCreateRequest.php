@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Http\Requests;
 
 use EscolaLms\Core\Models\User;
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ScormCreateRequest extends FormRequest
@@ -14,7 +15,7 @@ class ScormCreateRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can('create Scorm', 'api');
+        return $user->can(ScormPermissionsEnum::SCORM_CREATE, 'api');
     }
 
     /**

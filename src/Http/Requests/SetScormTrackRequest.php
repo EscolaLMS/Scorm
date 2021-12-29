@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Http\Requests;
 
 use App\Models\User;
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SetScormTrackRequest extends FormRequest
@@ -14,7 +15,7 @@ class SetScormTrackRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can('get track Scorm', 'api');
+        return $user->can(ScormPermissionsEnum::SCORM_SET_TRACK, 'api');
     }
 
     /**

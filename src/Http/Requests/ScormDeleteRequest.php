@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Http\Requests;
 
 use EscolaLms\Core\Models\User;
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ScormDeleteRequest extends FormRequest
@@ -14,7 +15,7 @@ class ScormDeleteRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can('delete Scorm', 'api');
+        return $user->can(ScormPermissionsEnum::SCORM_DELETE, 'api');
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace EscolaLms\Scorm\Http\Requests;
 
 use EscolaLms\Core\Models\User;
+use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ScormListRequest extends FormRequest
@@ -14,7 +15,7 @@ class ScormListRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can('update Scorm', 'api');
+        return $user->can(ScormPermissionsEnum::SCORM_UPDATE, 'api');
     }
 
     /**
@@ -24,7 +25,6 @@ class ScormListRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-        ];
+        return [];
     }
 }
