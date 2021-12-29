@@ -37,9 +37,11 @@ class ScormTrackService implements ScormTrackServiceContract
         return is_null($scormScoTracking->{$strategy->getField($key)}) ? '' : $scormScoTracking->{$strategy->getField($key)};
     }
 
-    public function createScoTracking($scoUuid, $userId = null)
+    public function createScoTracking($scoUuid, $userId = null): ScoTracking
     {
-        $sco = ScormScoModel::where('uuid', $scoUuid)->firstOrFail();
+        $sco = ScormScoModel::where('uuid', $scoUuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
 
         $version = $sco->scorm->version;
         $scoTracking = new ScoTracking();
@@ -249,8 +251,8 @@ class ScormTrackService implements ScormTrackServiceContract
                 $dataSessionTime = isset($data['cmi.session_time']) ?
                     $this->formatSessionTime($data['cmi.session_time']) :
                     'PT0S';
-                $completionStatus = isset($data['cmi.completion_status']) ? $data['cmi.completion_status'] : 'unknown';
-                $successStatus = isset($data['cmi.success_status']) ? $data['cmi.success_status'] : 'unknown';
+                $completionStatus = $data['cmi.completion_status'] ?? 'unknown';
+                $lessonStatus = $data['cmi.success_status'] ?? 'unknown';
                 $scoreRaw = isset($data['cmi.score.raw']) ? intval($data['cmi.score.raw']) : $updateResult->score_raw;
                 $scoreMin = isset($data['cmi.score.min']) ? intval($data['cmi.score.min']) : $updateResult->score_min;
                 $scoreMax = isset($data['cmi.score.max']) ? intval($data['cmi.score.max']) : $updateResult->score_max;
@@ -285,11 +287,6 @@ class ScormTrackService implements ScormTrackServiceContract
                 }
 
                 // Update best success status and completion status
-                $lessonStatus = $successStatus;
-                if (in_array($successStatus, ['passed', 'failed'])) {
-                    $lessonStatus = $successStatus;
-                }
-
                 $bestStatus = $tracking->getLessonStatus();
                 if (empty($bestStatus) || ($lessonStatus !== $bestStatus && $statusPriority[$lessonStatus] > $statusPriority[$bestStatus])) {
                     $tracking->setLessonStatus($lessonStatus);

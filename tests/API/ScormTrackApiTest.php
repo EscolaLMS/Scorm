@@ -21,7 +21,7 @@ class ScormTrackApiTest extends TestCase
                 'fileName' => 'RuntimeBasicCalls_SCORM12.zip',
                 'payload' => [
                     'cmi' => [
-                        'cmi.core.lesson_status' => 'completed',
+                        'cmi.core.lesson_status' => 'passed',
                         'cmi.core.lesson_location' => '3',
                     ]
                 ]
@@ -30,7 +30,7 @@ class ScormTrackApiTest extends TestCase
                 'fileName' => 'RuntimeBasicCalls_SCORM20043rdEdition.zip',
                 'payload' => [
                     'cmi' => [
-                        'cmi.completion_status' => 'completed',
+                        'cmi.success_status' => 'passed',
                         'cmi.location' => '3',
                     ]
                 ]
@@ -53,7 +53,7 @@ class ScormTrackApiTest extends TestCase
             ->assertStatus(200);
 
         $this->assertDatabaseHas('scorm_sco_tracking', [
-            'lesson_status' => 'completed',
+            'lesson_status' => 'passed',
             'lesson_location' => '3',
             'progression' => '100',
             'sco_id' => ScormScoModel::where('uuid', $scos->uuid)->first()->getKey(),
