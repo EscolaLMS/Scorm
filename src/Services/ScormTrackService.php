@@ -40,7 +40,7 @@ class ScormTrackService implements ScormTrackServiceContract
     public function createScoTracking($scoUuid, $userId = null): ScoTracking
     {
         $sco = ScormScoModel::where('uuid', $scoUuid)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->firstOrFail();
 
         $version = $sco->scorm->version;

@@ -13,8 +13,6 @@
     const token = settings.token;
     const cmi = settings.player.cmi;
 
-    console.log(settings);
-
     if (settings.version === 'scorm_12') {
         scorm12();
     }
@@ -58,8 +56,6 @@
         window.API_1484_11.loadFromJSON(cmi);
 
         window.API_1484_11.on('SetValue.cmi.*', function(CMIElement, value) {
-            console.log('SetValue args', arguments);
-
             const data = {
                 cmi: {
                     [CMIElement]: value
@@ -70,8 +66,6 @@
         });
 
         // window.API_1484_11.on('GetValue.cmi.*', function(CMIElement) {
-        //     console.log('GetValue args', arguments);
-        //
         //     get(CMIElement)
         //         .then(res => res.json())
         //         .then(res => {
