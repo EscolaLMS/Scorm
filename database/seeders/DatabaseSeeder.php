@@ -2,6 +2,7 @@
 
 namespace EscolaLms\Scorm\Database\Seeders;
 
+use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\UploadedFile;
 
@@ -20,7 +21,8 @@ class DatabaseSeeder extends Seeder
 
     public function __construct()
     {
-        $this->helper =  new ScormService();
+        $scormTrackService = app(ScormTrackServiceContract::class);
+        $this->helper =  new ScormService($scormTrackService);
     }
 
     private function fromZip($filePath)
