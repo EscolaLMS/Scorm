@@ -4,13 +4,17 @@ namespace Tests\Feature;
 
 use EscolaLms\Scorm\Tests\ScormTestTrait;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
+use Peopleaps\Scorm\Entity\Scorm;
+use Peopleaps\Scorm\Model\ScormModel;
+use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormAdminApiTest extends TestCase
 {
-    use DatabaseTransactions, ScormTestTrait;
+    use DatabaseTransactions, ScormTestTrait, WithFaker;
 
     public function test_content_upload()
     {
@@ -92,6 +96,33 @@ class ScormAdminApiTest extends TestCase
         });
 
         $this->assertCount(1, $found);
+    }
+
+    public function test_get_scos_list()
+    {
+        $scormSco = new ScormScoModel;
+        $scormSco->uuid = $this->faker->uuid;
+        $scormSco->save();
+
+        $scormSco = new ScormScoModel;
+        $scormSco->uuid = $this->faker->uuid;
+        $scormSco->save();
+
+        $this->actingAs($this->user, 'api')->get('/api/admin/scorm/scos')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonStructure([
+                'data' => [[
+                    'id',
+                    'scorm_id',
+                    'uuid',
+                    'entry_url',
+                    'identifier',
+                    'title',
+                    'sco_parameters',
+                ]]
+            ]);
+
     }
 
     public function test_player_view()

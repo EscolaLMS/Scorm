@@ -18,15 +18,12 @@ use Peopleaps\Scorm\Model\ScormModel;
 class ScormController extends EscolaLmsBaseController implements ScormControllerContract
 {
     private ScormServiceContract $scormService;
-    private ScormTrackServiceContract $scormTrackService;
 
     public function __construct(
-        ScormServiceContract $scormService,
-        ScormTrackServiceContract $scormTrackService
+        ScormServiceContract $scormService
     )
     {
         $this->scormService = $scormService;
-        $this->scormTrackService = $scormTrackService;
     }
 
     public function upload(ScormCreateRequest $request): JsonResponse
@@ -70,6 +67,22 @@ class ScormController extends EscolaLmsBaseController implements ScormController
     {
         $list = $this->scormService->listModels($request->get('per_page'));
         return $this->sendResponse($list, "Scorm list fetched successfully");
+    }
+
+    public function getScos(ScormListRequest $request): JsonResponse
+    {
+        $columns = [
+            "id",
+            "scorm_id",
+            "uuid",
+            "entry_url",
+            "identifier",
+            "title",
+            "sco_parameters"
+        ];
+
+        $list = $this->scormService->listScoModels($columns);
+        return $this->sendResponse($list, "Scos list fetched successfully");
     }
 
     public function delete(ScormDeleteRequest $request, ScormModel $scormModel): JsonResponse
