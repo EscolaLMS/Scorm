@@ -17,6 +17,8 @@ class PermissionTableSeeder extends Seeder
         $tutor = Role::findOrCreate('tutor', 'api');
 
         $permissions = [
+            ScormPermissionsEnum::SCORM_LIST,
+            ScormPermissionsEnum::SCORM_READ,
             ScormPermissionsEnum::SCORM_CREATE,
             ScormPermissionsEnum::SCORM_UPDATE,
             ScormPermissionsEnum::SCORM_DELETE,

@@ -5,6 +5,7 @@ namespace EscolaLms\Scorm\Http\Controllers\Swagger;
 use EscolaLms\Scorm\Http\Requests\ScormCreateRequest;
 use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
 use EscolaLms\Scorm\Http\Requests\ScormListRequest;
+use EscolaLms\Scorm\Http\Requests\ScormReadRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -138,10 +139,10 @@ interface ScormControllerContract
      * )
      *
      * @param string $uuid
-     * @param Request $request
+     * @param ScormReadRequest $request
      * @return View
      */
-    public function show(string $uuid, Request $request): View;
+    public function show(string $uuid, ScormReadRequest $request): View;
 
     /**
      * @OA\Get(

@@ -4,6 +4,7 @@ namespace EscolaLms\Scorm\Http\Controllers;
 
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormControllerContract;
 use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
+use EscolaLms\Scorm\Http\Requests\ScormReadRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
 use Exception;
@@ -49,7 +50,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         return $this->sendResponse($data, "Scorm Package uploaded successfully");
     }
 
-    public function show(string $uuid, Request $request): View
+    public function show(string $uuid, ScormReadRequest $request): View
     {
         $data = $this->service->getScoViewDataByUuid($uuid);
         return view('scorm::player', ['data' => $data]);

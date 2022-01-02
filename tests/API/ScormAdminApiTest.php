@@ -12,7 +12,7 @@ class ScormAdminApiTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_content_upload()
+    public function test_content_upload(): void
     {
         $response = $this->uploadScorm();
         $data = $response->getData();
@@ -21,7 +21,7 @@ class ScormAdminApiTest extends TestCase
         $this->assertEquals($data->data->scormData->scos[0]->title, "Employee Health and Wellness (Sample Course)");
     }
 
-    public function test_content_upload_invalid_data()
+    public function test_content_upload_invalid_data(): void
     {
         $this->actingAs($this->user, 'api')
             ->json('POST', '/api/admin/scorm/upload', [
@@ -32,7 +32,7 @@ class ScormAdminApiTest extends TestCase
             ]);
     }
 
-    public function test_content_upload_invalid_data_format()
+    public function test_content_upload_invalid_data_format(): void
     {
         $this->actingAs($this->user, 'api')
             ->json('POST', '/api/admin/scorm/upload', [
@@ -42,7 +42,7 @@ class ScormAdminApiTest extends TestCase
             ]);
     }
 
-    public function test_content_parse()
+    public function test_content_parse(): void
     {
         $zipFile = $this->getUploadScormFile();
         $response = $this->actingAs($this->user, 'api')->json('POST', '/api/admin/scorm/parse', [
@@ -55,7 +55,7 @@ class ScormAdminApiTest extends TestCase
         $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
     }
 
-    public function test_delete_scorm()
+    public function test_delete_scorm(): void
     {
         $response = $this->uploadScorm();
         $data = $response->getData();
@@ -76,7 +76,7 @@ class ScormAdminApiTest extends TestCase
         ]);
     }
 
-    public function test_get_model_list()
+    public function test_get_model_list(): void
     {
         $response = $this->uploadScorm();
         $data = $response->getData();
@@ -94,7 +94,7 @@ class ScormAdminApiTest extends TestCase
         $this->assertCount(1, $found);
     }
 
-    public function test_player_view()
+    public function test_player_view(): void
     {
         $response = $this->uploadScorm();
         $data = $response->getData();

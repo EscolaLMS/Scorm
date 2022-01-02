@@ -11,6 +11,16 @@ class ScormPolicy
 {
     use HandlesAuthorization;
 
+    public function list(User $user): bool
+    {
+        return $user->can(ScormPermissionsEnum::SCORM_LIST);
+    }
+
+    public function read(User $user): bool
+    {
+        return $user->can(ScormPermissionsEnum::SCORM_READ);
+    }
+
     /**
      * @param User $user
      * @return bool

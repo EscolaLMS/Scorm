@@ -6,7 +6,7 @@ use EscolaLms\Core\Models\User;
 use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ScormListRequest extends FormRequest
+class ScormReadRequest extends FormRequest
 {
     /**
      * @return bool
@@ -15,7 +15,7 @@ class ScormListRequest extends FormRequest
     {
         /** @var User $user */
         $user = $this->user();
-        return $user->can(ScormPermissionsEnum::SCORM_LIST, 'api');
+        return $user->can(ScormPermissionsEnum::SCORM_READ, 'api');
     }
 
     /**
