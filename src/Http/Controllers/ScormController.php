@@ -7,6 +7,7 @@ use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
 use EscolaLms\Scorm\Http\Requests\ScormReadRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
+use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Exception;
 use EscolaLms\Scorm\Http\Requests\ScormCreateRequest;
 use EscolaLms\Scorm\Http\Requests\ScormListRequest;
@@ -17,11 +18,13 @@ use Peopleaps\Scorm\Model\ScormModel;
 
 class ScormController extends EscolaLmsBaseController implements ScormControllerContract
 {
-    private ScormServiceContract $service;
+    private ScormServiceContract $scormService;
 
-    public function __construct(ScormServiceContract $service)
+    public function __construct(
+        ScormServiceContract $scormService
+    )
     {
-        $this->service = $service;
+        $this->scormService = $scormService;
     }
 
     public function upload(ScormCreateRequest $request): JsonResponse
@@ -29,8 +32,8 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         $file = $request->file('zip');
 
         try {
-            $data = $this->service->uploadScormArchive($file);
-            $data = $this->service->removeRecursion($data);
+            $data = $this->scormService->uploadScormArchive($file);
+            $data = $this->scormService->removeRecursion($data);
         } catch (Exception $error) {
             return $this->sendError($error->getMessage());
         }
@@ -42,8 +45,8 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         $file = $request->file('zip');
 
         try {
-            $data = $this->service->parseScormArchive($file);
-            $data = $this->service->removeRecursion($data);
+            $data = $this->scormService->parseScormArchive($file);
+            $data = $this->scormService->removeRecursion($data);
         } catch (Exception $error) {
             $this->sendError($error->getMessage());
         }
@@ -52,19 +55,40 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 
     public function show(string $uuid, ScormReadRequest $request): View
     {
-        $data = $this->service->getScoViewDataByUuid($uuid);
+        $data = $this->scormService->getScoViewDataByUuid(
+            $uuid,
+            $request->user() ? $request->user()->getKey() : null,
+            $request->bearerToken()
+        );
+
         return view('scorm::player', ['data' => $data]);
     }
 
     public function index(ScormListRequest $request): JsonResponse
     {
-        $list = $this->service->listModels($request->get('per_page'));
+        $list = $this->scormService->listModels($request->get('per_page'));
         return $this->sendResponse($list, "Scorm list fetched successfully");
+    }
+
+    public function getScos(ScormListRequest $request): JsonResponse
+    {
+        $columns = [
+            "id",
+            "scorm_id",
+            "uuid",
+            "entry_url",
+            "identifier",
+            "title",
+            "sco_parameters"
+        ];
+
+        $list = $this->scormService->listScoModels($columns);
+        return $this->sendResponse($list, "Scos list fetched successfully");
     }
 
     public function delete(ScormDeleteRequest $request, ScormModel $scormModel): JsonResponse
     {
-        $this->service->deleteScormData($scormModel);
+        $this->scormService->deleteScormData($scormModel);
         return $this->sendSuccess("Scorm Package deleted successfully");
     }
 }
