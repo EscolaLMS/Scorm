@@ -2,10 +2,8 @@
 
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Scorm\Tests\ScormTestTrait;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\File;
+use EscolaLms\Scorm\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 
 class ScormServiceTest extends TestCase
 {
