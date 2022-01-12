@@ -13,10 +13,10 @@ Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api', 'bindi
     Route::get('/scos', [ScormController::class, "getScos"]);
 });
 
-Route::group(['prefix' => 'api/scorm', 'middleware' => ['auth:api', 'bindings']], function () {
+Route::group(['prefix' => 'api/scorm'], function () {
     Route::get('/play/{uuid}', [ScormController::class, "show"]);
 
-    Route::group(['prefix' => '/track'], function () {
+    Route::group(['prefix' => '/track', 'middleware' => ['auth:api', 'bindings']], function () {
         Route::post('/{uuid}', [ScormTrackController::class, 'set']);
         Route::get('/{scoId}/{key}', [ScormTrackController::class, 'get']);
     });

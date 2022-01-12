@@ -335,32 +335,32 @@ class ScormService implements ScormServiceContract
 
     public function zipScorm(int $id): string
     {
-        $disk = Storage::disk(config('scorm.disk'));
+        $scormDisk = Storage::disk(config('scorm.disk'));
         $scorm = ScormModel::find($id);
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
-        $files = $disk->allFiles($scormPath);
+        $files = $scormDisk->allFiles($scormPath);
 
-        if (!$disk->exists('scorm/exports')) {
-            $disk->makeDirectory('scorm/exports');
+        if (!Storage::exists('scorm/exports')) {
+            Storage::makeDirectory('scorm/exports');
         }
 
         $zip = new \ZipArchive();
         $zipFilePath = 'scorm/exports/' . uniqid(rand(), true) . $scorm->hash_name . '.zip';
-        $zipFile = $disk->path($zipFilePath);
+        $zipFile = Storage::path($zipFilePath);
 
         if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
             throw new \Exception("Zip file could not be created: " . $zip->getStatusString());
         }
 
         foreach ($files as $file) {
-            if (! $zip->addFile($disk->path($file), basename($file))) {
+            if (! $zip->addFile($scormDisk->path($file), basename($file))) {
                 throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
             }
         }
 
         $zip->close();
 
-        return $disk->path($zipFilePath);
+        return $zipFilePath;
     }
 
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator
