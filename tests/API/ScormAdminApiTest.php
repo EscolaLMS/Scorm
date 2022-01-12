@@ -8,8 +8,6 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
-use Peopleaps\Scorm\Entity\Scorm;
-use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormAdminApiTest extends TestCase

@@ -333,6 +333,36 @@ class ScormService implements ScormServiceContract
         return $data;
     }
 
+    public function zipScorm(int $id): string
+    {
+        $scormDisk = Storage::disk(config('scorm.disk'));
+        $scorm = ScormModel::find($id);
+        $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
+        $files = $scormDisk->allFiles($scormPath);
+
+        if (!Storage::exists('scorm/exports')) {
+            Storage::makeDirectory('scorm/exports');
+        }
+
+        $zip = new \ZipArchive();
+        $zipFilePath = 'scorm/exports/' . uniqid(rand(), true) . $scorm->hash_name . '.zip';
+        $zipFile = Storage::path($zipFilePath);
+
+        if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            throw new \Exception("Zip file could not be created: " . $zip->getStatusString());
+        }
+
+        foreach ($files as $file) {
+            if (! $zip->addFile($scormDisk->path($file), basename($file))) {
+                throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
+            }
+        }
+
+        $zip->close();
+
+        return $zipFilePath;
+    }
+
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator
     {
         return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
