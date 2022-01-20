@@ -99,6 +99,7 @@ class ScormService implements ScormServiceContract
             $sco->completion_threshold = $scorm->completionThreshold;
             $sco->prerequisites = $scorm->prerequisites;
             $sco->save();
+            $scorm->id = $sco->id;
 
             if (!empty($scorm->scoChildren)) {
                 $this->saveToDb($scorm->scoChildren, $scormModel);
