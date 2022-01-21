@@ -53,7 +53,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         return $this->sendResponse($data, "Scorm Package uploaded successfully");
     }
 
-    public function show(string $uuid, Request $request): View
+    public function show(string $uuid, ScormReadRequest $request): View
     {
         $data = $this->scormService->getScoViewDataByUuid(
             $uuid,
