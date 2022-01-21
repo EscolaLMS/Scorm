@@ -20,4 +20,5 @@ interface ScormServiceContract
     public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel;
     public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator;
     public function listScoModels(array $columns = ['*']): Collection;
+    public function zipScorm(int $id): string;
 }

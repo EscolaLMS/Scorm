@@ -83,6 +83,10 @@
     }
 
     function post(data) {
+        if (!token) {
+            return;
+        }
+
         fetch(settings.lmsUrl + '/' + settings.uuid, {
             method: 'POST',
             mode: 'cors',
@@ -95,6 +99,10 @@
     }
 
     function get(key) {
+        if (!token) {
+            return;
+        }
+
         return fetch(settings.lmsUrl + '/' + settings.scorm_id + '/' + key, {
             method: 'GET',
             mode: 'cors',
