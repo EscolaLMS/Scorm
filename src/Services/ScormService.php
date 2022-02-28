@@ -319,7 +319,8 @@ class ScormService implements ScormServiceContract
                 $this->getScormTrack($data->getKey(), $userId)
             );
 
-        $data['entry_url_absolute'] = Storage::url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
+        $data['entry_url_absolute'] = Storage::disk(config('scorm.disk'))
+            ->url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
         $data['lmsUrl'] = url('/api/scorm/track');
