@@ -17,22 +17,24 @@ This package is used to store and manage SCORM packages.
 
 
 ## Database
-1. `scorm` - Scorm package main data
-2. `scorm_scos` - Educational content data associated with the Scorm package
+1. `scorm` - Scorm package main data.
+2. `scorm_sco` - Educational content data associated with the Scorm package.
+3. `scorm_sco_tracking` - Stores the user's progress.
 ```
 Scorm 1 -> n ScormScos
+Scorm 1 -> n ScormScoTracking
 ```
 
 ## Tutorial
-1. Get the Scorm package from [EscolaLms\Scorm](https://github.com/EscolaLMS/Scorm/tree/main/database/mocks) or [Sample SCORM packages](https://scorm.com/scorm-explained/technical-scorm/golf-examples/?utm_source=google&utm_medium=natural_search)
-2. Upload Scorm package in Zip format `/api/admin/scorm/upload`
-3. Start the player by specifying uuid Scorm SCO `/api/scorm/play/{uuid}`
-4. The package supports tracking user progress, to achieve this, you need to send an authorization token in the header
+1. Get the Scorm package from [EscolaLms\Scorm](https://github.com/EscolaLMS/Scorm/tree/main/database/mocks) or [Sample SCORM packages](https://scorm.com/scorm-explained/technical-scorm/golf-examples/?utm_source=google&utm_medium=natural_search).
+2. Upload Scorm package in Zip format `/api/admin/scorm/upload`.
+3. Start the player by specifying uuid Scorm SCO `/api/scorm/play/{uuid}`.
+4. The package supports tracking user progress, to achieve this, you need to send an authorization token in the header.
 
 ## Endpoints
-- `/api/admin/scorm/upload` - Upload ZIP Scorm Package into app local storage
-- `/api/scorm/play/{uuid}` - SCORM SCO player
-- [![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/Scorm/) - Other endpoints are available here
+- `/api/admin/scorm/upload` - Upload ZIP Scorm Package into app local storage.
+- `/api/scorm/play/{uuid}` - SCORM SCO player.
+- [![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/Scorm/) - Other endpoints are available here.
 
 
 ## Tests
@@ -44,7 +46,7 @@ Test details
 
 
 ## How to use this on frontend.
-Endpoint `/api/scorm/play/{uuid}` returns the html file with the `<iframe>`
+Endpoint `/api/scorm/play/{uuid}` returns the html file with the `<iframe>`.
 
 ```html
 <html lang="en">
@@ -55,7 +57,7 @@ Endpoint `/api/scorm/play/{uuid}` returns the html file with the `<iframe>`
 ```
 
 ## Permissions
-Permissions are defined in [seeder](https://github.com/EscolaLMS/Scorm/blob/main/src/Enums/ScormPermissionsEnum.php)
+Permissions are defined in [seeder](https://github.com/EscolaLMS/Scorm/blob/main/src/Enums/ScormPermissionsEnum.php).
 
 ## Todo.
 The package does not support all available scorm formats 
