@@ -25,23 +25,27 @@ class ScormAdminApiTest extends TestCase
 
     public function test_content_upload_invalid_data(): void
     {
-        $this->actingAs($this->user, 'api')
+        $response = $this->actingAs($this->user, 'api')
             ->json('POST', '/api/admin/scorm/upload', [
                 'zip' => UploadedFile::fake()->create('file.zip', 100, 'application/zip'),
-            ])->assertJson([
-                'success' => false,
-                'message' => "invalid_scorm_archive_message"
             ]);
+
+        $response->assertUnprocessable();
+        $response->assertJson([
+            'success' => false,
+            'message' => 'invalid_scorm_archive_message'
+        ]);
     }
 
     public function test_content_upload_invalid_data_format(): void
     {
-        $this->actingAs($this->user, 'api')
+        $response = $this->actingAs($this->user, 'api')
             ->json('POST', '/api/admin/scorm/upload', [
                 'zip' => UploadedFile::fake()->create('file.svg', 100, 'application/svg'),
-            ])->assertJson([
-                'message' => 'The given data was invalid.',
             ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['zip' => 'The zip must be a file of type: zip.']);
     }
 
     public function test_content_parse(): void
@@ -53,7 +57,7 @@ class ScormAdminApiTest extends TestCase
 
         $data = $response->getData();
 
-        $response->assertStatus(200);
+        $response->assertOk();
         $this->assertEquals($data->data->scos[0]->title, "Employee Health and Wellness (Sample Course)");
     }
 
@@ -67,7 +71,7 @@ class ScormAdminApiTest extends TestCase
 
         $response = $this->actingAs($this->user, 'api')->json('DELETE', '/api/admin/scorm/' . $model->id);
 
-        $response->assertStatus(200);
+        $response->assertOk();
         $this->assertFalse(Storage::disk(config('scorm.disk'))->exists($path));
         $this->assertDatabaseMissing('scorm', [
             'id' => $model->id,
@@ -129,6 +133,6 @@ class ScormAdminApiTest extends TestCase
         $data = $response->getData();
 
         $response = $this->actingAs($this->user, 'api')->get('/api/scorm/play/' . $data->data->scormData->scos[0]->uuid);
-        $response->assertStatus(200);
+        $response->assertOk();
     }
 }
