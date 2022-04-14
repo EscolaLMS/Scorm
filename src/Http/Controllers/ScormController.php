@@ -35,8 +35,9 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             $data = $this->scormService->uploadScormArchive($file);
             $data = $this->scormService->removeRecursion($data);
         } catch (Exception $error) {
-            return $this->sendError($error->getMessage());
+            return $this->sendError($error->getMessage(), 422);
         }
+
         return $this->sendResponse($data, "Scorm Package uploaded successfully");
     }
 
@@ -48,8 +49,9 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             $data = $this->scormService->parseScormArchive($file);
             $data = $this->scormService->removeRecursion($data);
         } catch (Exception $error) {
-            $this->sendError($error->getMessage());
+            $this->sendError($error->getMessage(), 422);
         }
+
         return $this->sendResponse($data, "Scorm Package uploaded successfully");
     }
 

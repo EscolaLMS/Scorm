@@ -26,7 +26,7 @@ class ScormCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'zip' => 'file|required|mimes:zip',
+            'zip' => ['file', 'required', 'mimes:zip'],
         ];
     }
 }
