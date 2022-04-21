@@ -34,7 +34,8 @@ Scorm 1 -> n ScormScoTracking
 ## Endpoints
 - `/api/admin/scorm/upload` - Upload ZIP Scorm Package into app local storage.
 - `/api/scorm/play/{uuid}` - SCORM SCO player.
-- [![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/Scorm/) - Other endpoints are available here.
+
+All the endpoints are defined in swagger [![swagger](https://img.shields.io/badge/documentation-swagger-green)](https://escolalms.github.io/Scorm/)
 
 
 ## Tests
@@ -51,13 +52,20 @@ Endpoint `/api/scorm/play/{uuid}` returns the html file with the `<iframe>`.
 ```html
 <html lang="en">
 ...
-<iframe src="api/storage/{uuid}/index.html"></iframe>
+<iframe src="api/storage/{scorm-version}/{uuid}/index.html"></iframe>
 ...
 </html>
 ```
 
+### Admin panel
+**List of Scorm packages**
+![List of Scorm packages](docs/list.png "List of Scorm packages")
+
+**Scorm player**
+![Scorm player](docs/player.png "Scorm player")
+
 ## Permissions
-Permissions are defined in [seeder](https://github.com/EscolaLMS/Scorm/blob/main/src/Enums/ScormPermissionsEnum.php).
+Permissions are defined in [seeder](database/seeders/PermissionTableSeeder.php).
 
 ## Todo.
 The package does not support all available scorm formats 

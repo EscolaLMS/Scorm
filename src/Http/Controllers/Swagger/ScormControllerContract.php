@@ -139,10 +139,10 @@ interface ScormControllerContract
      * )
      *
      * @param string $uuid
-     * @param ScormReadRequest $request
+     * @param Request $request
      * @return View
      */
-    public function show(string $uuid, ScormReadRequest $request): View;
+    public function show(string $uuid, Request $request): View;
 
     /**
      * @OA\Get(
