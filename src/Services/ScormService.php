@@ -342,13 +342,13 @@ class ScormService implements ScormServiceContract
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
         $files = $scormDisk->allFiles($scormPath);
 
-        if (!Storage::exists('scorm/exports')) {
-            Storage::makeDirectory('scorm/exports');
+        if (!Storage::disk('local')->exists('scorm/exports')) {
+            Storage::disk('local')->makeDirectory('scorm/exports');
         }
 
         $zip = new \ZipArchive();
         $zipFilePath = 'scorm/exports/' . uniqid(rand(), true) . $scorm->hash_name . '.zip';
-        $zipFile = Storage::path($zipFilePath);
+        $zipFile = Storage::disk('local')->path($zipFilePath);
 
         if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
             throw new \Exception("Zip file could not be created: " . $zip->getStatusString());
