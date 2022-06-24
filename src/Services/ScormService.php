@@ -225,20 +225,11 @@ class ScormService implements ScormServiceContract
             throw new StorageNotFoundException();
         }
 
-        $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root');
-
-        if (substr($rootFolder, -1) != '/') {
-            // If end with xxx/
-            $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
+        if (!Storage::disk(config('scorm.disk'))->exists($hashName)) {
+            Storage::disk(config('scorm.disk'))->makeDirectory($hashName);
         }
 
-        $destinationDir = $rootFolder . $hashName; // file path
-
-        if (!File::isDirectory($destinationDir)) {
-            File::makeDirectory($destinationDir, 0755, true, true);
-        }
-
-        $zip->extractTo($destinationDir);
+        $zip->extractTo(Storage::disk(config('scorm.disk'))->path($hashName));
         $zip->close();
     }
 
@@ -252,28 +243,19 @@ class ScormService implements ScormServiceContract
         $hashName = Uuid::uuid4();
         $hashFileName = $hashName . '.zip';
         $scormData = $this->parseScormArchive($file);
-        $this->unzipScormArchive($file, 'scorm/' . $scormData['version'] . '/' . $hashName);
+        $scormFilePath = 'scorm/' . $scormData['version'] . '/' . $hashName;
+        $this->unzipScormArchive($file, $scormFilePath);
 
         if (!config()->has('filesystems.disks.' . config('scorm.disk') . '.root')) {
             throw new StorageNotFoundException();
         }
 
-        $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root');
-
-        if (substr($rootFolder, -1) != '/') {
-            // If end with xxx/
-            $rootFolder = config('filesystems.disks.' . config('scorm.disk') . '.root') . '/';
-        }
-
-        $destinationDir = 'scorm/' . $scormData['version'] . '/' . $rootFolder . $hashName; // file path
-
-        // Move Scorm archive in the files directory
-        $finalFile = $file->move($destinationDir, $hashName . '.zip');
+        Storage::disk(config('scorm.disk'))->putFileAs($scormFilePath, $file, $hashFileName . '.zip');
 
         return [
             'name' => $hashFileName, // to follow standard file data format
             'hashName' => $hashName,
-            'type' => $finalFile->getMimeType(),
+            'type' => $file->getMimeType(),
             'version' => $scormData['version'],
             'scos' => $scormData['scos'],
         ];
