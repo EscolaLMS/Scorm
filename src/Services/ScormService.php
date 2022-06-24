@@ -229,7 +229,7 @@ class ScormService implements ScormServiceContract
             Storage::disk(config('scorm.disk'))->makeDirectory($hashName);
         }
 
-        $zip->extractTo(Storage::path($hashName));
+        $zip->extractTo(Storage::disk(config('scorm.disk'))->path($hashName));
         $zip->close();
     }
 
@@ -250,7 +250,7 @@ class ScormService implements ScormServiceContract
             throw new StorageNotFoundException();
         }
 
-        Storage::putFileAs($scormFilePath, $file, $hashFileName . '.zip');
+        Storage::disk(config('scorm.disk'))->putFileAs($scormFilePath, $file, $hashFileName . '.zip');
 
         return [
             'name' => $hashFileName, // to follow standard file data format
