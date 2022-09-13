@@ -9,11 +9,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Peopleaps\Scorm\Entity\Scorm;
-use Peopleaps\Scorm\Entity\ScoTracking;
 use Peopleaps\Scorm\Exception\InvalidScormArchiveException;
 use Peopleaps\Scorm\Exception\StorageNotFoundException;
 use Peopleaps\Scorm\Library\ScormLib;
@@ -250,7 +248,7 @@ class ScormService implements ScormServiceContract
             throw new StorageNotFoundException();
         }
 
-        Storage::disk(config('scorm.disk'))->putFileAs($scormFilePath, $file, $hashFileName . '.zip');
+        Storage::disk(config('scorm.disk'))->putFileAs($scormFilePath, $file, $hashFileName);
 
         return [
             'name' => $hashFileName, // to follow standard file data format
@@ -319,10 +317,23 @@ class ScormService implements ScormServiceContract
 
     public function zipScorm(int $id): string
     {
-        $scormDisk = Storage::disk(config('scorm.disk'));
         $scorm = ScormModel::find($id);
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
-        $files = $scormDisk->allFiles($scormPath);
+        $scormFilePath =  $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
+
+        if (Storage::disk('local')->exists($scormFilePath)) {
+            return $scormFilePath;
+        }
+
+        return $this->zipScormFiles($scorm);
+    }
+
+    public function zipScormFiles(ScormModel $scorm): string
+    {
+        $scormDisk = Storage::disk(config('scorm.disk'));
+        $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
+        $scormFilePath =  $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
+        $files = array_filter($scormDisk->allFiles($scormPath), fn($item) => $item !== $scormFilePath);
 
         if (!Storage::disk('local')->exists('scorm/exports')) {
             Storage::disk('local')->makeDirectory('scorm/exports');
@@ -337,7 +348,9 @@ class ScormService implements ScormServiceContract
         }
 
         foreach ($files as $file) {
-            if (! $zip->addFile($scormDisk->path($file), basename($file))) {
+            $prefix = 'scorm/' . $scorm->version . DIRECTORY_SEPARATOR . $scorm->uuid . DIRECTORY_SEPARATOR;
+            $dir = str_replace($prefix, "", $file);
+            if (! $zip->addFile($scormDisk->path($file), $dir)) {
                 throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
             }
         }
