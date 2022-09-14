@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/scorm-again@latest/dist/scorm-again.js"></script>
   <style>
     html,body,iframe { width: 100%; height: 100%; padding: 0; margin: 0; border: none}
+    iframe { display:block }
   </style>
   <script type="text/javascript">
     const settings = @json($data);
