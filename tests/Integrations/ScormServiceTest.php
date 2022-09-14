@@ -24,4 +24,19 @@ class ScormServiceTest extends TestCase
         $path = $this->scormService->zipScorm($scorm['model']->id);
         Storage::assertExists($path);
     }
+
+    public function test_zip_scorm_when_zip_not_exists(): void
+    {
+        $scorm = $this->scormService->uploadScormArchive($this->getUploadScormFile('RuntimeBasicCalls_SCORM20043rdEdition.zip'));
+        $scormModel = $scorm['model'];
+        $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scormModel->version . DIRECTORY_SEPARATOR . $scormModel->hash_name;
+        $scormFilePath =  $scormPath . DIRECTORY_SEPARATOR . $scormModel->origin_file;
+
+        Storage::assertExists($scormFilePath);
+        Storage::delete($scormFilePath);
+        Storage::assertMissing($scormFilePath);
+
+        $path = $this->scormService->zipScorm($scorm['model']->id);
+        Storage::assertExists($path);
+    }
 }
