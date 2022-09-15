@@ -5,7 +5,9 @@ namespace EscolaLms\Scorm\Tests;
 use EscolaLms\Scorm\AuthServiceProvider;
 use EscolaLms\Scorm\Database\Seeders\PermissionTableSeeder;
 use EscolaLms\Scorm\EscolaLmsScormServiceProvider;
+use EscolaLms\Scorm\Tests\Models\Client;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laravel\Passport\Passport;
 use Laravel\Passport\PassportServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
 
@@ -19,6 +21,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
     {
         parent::setUp();
         $this->seed(PermissionTableSeeder::class);
+        Passport::useClientModel(Client::class);
         $this->authenticateAsAdmin();
     }
 
