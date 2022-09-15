@@ -39,4 +39,32 @@ class ScormServiceTest extends TestCase
         $path = $this->scormService->zipScorm($scorm['model']->id);
         Storage::assertExists($path);
     }
+
+    public function test_scorm_player_with_passed_user(): void
+    {
+        $user = config('auth.providers.users.model')::factory()->create();
+        $token = $user->createToken("Token")->accessToken;
+        $scormSco = $this->createScormSco();
+
+        $result = $this->scormService->getScoViewDataByUuid($scormSco->uuid, $user->getKey(), $token)->toArray();
+
+        $this->assertArrayHasKey('player', $result);
+        $this->assertTrue($result['player']->autoCommit);
+        $this->assertNotFalse($result['player']->lmsCommitUrl);
+        $this->assertNotNull($result['player']->xhrHeaders['Authorization']);
+        $this->assertTrue($result['player']->autoProgress);
+    }
+
+    public function test_scorm_player_preview_mode(): void
+    {
+        $scormSco = $this->createScormSco();
+
+        $result = $this->scormService->getScoViewDataByUuid($scormSco->uuid)->toArray();
+
+        $this->assertArrayHasKey('player', $result);
+        $this->assertFalse($result['player']->autoCommit);
+        $this->assertFalse($result['player']->lmsCommitUrl);
+        $this->assertNull($result['player']->xhrHeaders['Authorization']);
+        $this->assertFalse($result['player']->autoProgress);
+    }
 }

@@ -293,26 +293,7 @@ class ScormService implements ScormServiceContract
     public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel
     {
         $data = $this->getScoByUuid($scoUuid);
-        $cmi = $this
-            ->getScormFieldStrategy($data->scorm->version)
-            ->getCmiData(
-                $this->getScormTrack($data->getKey(), $userId)
-            );
-
-        $data['entry_url_absolute'] = Storage::disk(config('scorm.disk'))
-            ->url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
-        $data['version'] = $data->scorm->version;
-        $data['token'] = $token;
-        $data['lmsUrl'] = url('/api/scorm/track');
-
-        $data['player'] = (object) [
-            'lmsCommitUrl' => ' ',
-            'logLevel' => 1,
-            'autoProgress' => true,
-            'cmi' => $cmi
-        ];
-
-        return $data;
+        return $this->getScormPlayerConfig($data, $userId, $token);
     }
 
     public function zipScorm(int $id): string
@@ -389,5 +370,36 @@ class ScormService implements ScormServiceContract
         $strategy = 'EscolaLms\\Scorm\\Strategies\\' . $scormVersion . 'FieldStrategy';
 
         return new ScormFieldStrategy(new $strategy());
+    }
+
+    private function getScormTrackData(ScormScoModel $data, ?int $userId): array
+    {
+        return $this
+            ->getScormFieldStrategy($data->scorm->version)
+            ->getCmiData(
+                $this->getScormTrack($data->getKey(), $userId)
+            );
+    }
+
+    private function getScormPlayerConfig(ScormScoModel $data, ?int $userId = null, ?string $token = null): ScormScoModel
+    {
+        $cmi = $this->getScormTrackData($data, $userId);
+        $data['entry_url_absolute'] = Storage::disk(config('scorm.disk'))
+            ->url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
+        $data['version'] = $data->scorm->version;
+        $data['token'] = $token;
+        $data['lmsUrl'] = url('/api/scorm/track');
+        $data['player'] = (object) [
+            'autoCommit' => (bool) $token,
+            'lmsCommitUrl' =>  $token ? url('/api/scorm/track', $data->uuid) : false,
+            'xhrHeaders' => [
+                'Authorization' => $token ? ('Bearer ' . $token) : null
+            ],
+            'logLevel' => 1,
+            'autoProgress' => (bool) $token,
+            'cmi' => $cmi,
+        ];
+
+        return $data;
     }
 }

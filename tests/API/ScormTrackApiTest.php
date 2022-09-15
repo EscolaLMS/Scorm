@@ -23,6 +23,7 @@ class ScormTrackApiTest extends TestCase
                     'cmi' => [
                         'cmi.core.lesson_status' => 'passed',
                         'cmi.core.lesson_location' => '3',
+                        'cmi.core.total_time' => '00:00:01',
                     ]
                 ]
             ],
@@ -32,6 +33,7 @@ class ScormTrackApiTest extends TestCase
                     'cmi' => [
                         'cmi.success_status' => 'passed',
                         'cmi.location' => '3',
+                        'cmi.session_time' => 'PT1S',
                     ]
                 ]
             ],
@@ -47,6 +49,7 @@ class ScormTrackApiTest extends TestCase
         $response = $this->uploadScorm($fileName);
         $data = $response->getData();
         $scos = $data->data->scormData->scos[0];
+        $version = $data->data->scormData->version;
 
         $this->actingAs($this->user, 'api')
             ->json('POST', '/api/scorm/track/' . $scos->uuid, $payload)
@@ -56,6 +59,8 @@ class ScormTrackApiTest extends TestCase
             'lesson_status' => 'passed',
             'lesson_location' => '3',
             'progression' => '100',
+            'total_time_int' => $version === Scorm::SCORM_12 ? '100' : null, // 1s
+            'total_time_string' =>  $version === Scorm::SCORM_2004 ? 'P0DT0H0M1S' : null, // 1s
             'sco_id' => ScormScoModel::where('uuid', $scos->uuid)->first()->getKey(),
             'user_id' => $this->user->id
         ]);
