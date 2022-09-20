@@ -86,7 +86,7 @@ class ScormAdminApiTest extends TestCase
     {
         $this->createManyScorm(10);
 
-        $res = $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=5')
+        $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=5')
             ->assertOk()
             ->assertJsonCount(5, 'data.data');
     }
@@ -95,9 +95,23 @@ class ScormAdminApiTest extends TestCase
     {
         $this->createManyScorm(30);
 
-        $res = $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=0')
+        $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=0')
             ->assertOk()
             ->assertJsonCount(30, 'data.data');
+    }
+
+    public function test_search_model_list(): void
+    {
+        $scormSco = $this->createManyScos(10)[3];
+
+        $response = $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=5&search=' . $scormSco->title)
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data.0.scos')
+            ->assertJsonCount(1, 'data.data');
+
+        $data = $response->getData()->data->data;
+        $this->assertEquals($data[0]->scos[0]->title, $scormSco->title);
+        $this->assertEquals($data[0]->scos[0]->uuid, $scormSco->uuid);
     }
 
     public function test_get_model_list(): void

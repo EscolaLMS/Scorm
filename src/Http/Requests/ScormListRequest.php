@@ -27,4 +27,16 @@ class ScormListRequest extends FormRequest
     {
         return [];
     }
+
+    public function pageParams(): ?int
+    {
+        return $this->get('per_page') === null || $this->get('per_page') === "0"
+            ? 0
+            : $this->get('per_page');
+    }
+
+    public function searchParams(): ?array
+    {
+        return $this->except(['limit', 'skip', 'order', 'order_by']);
+    }
 }

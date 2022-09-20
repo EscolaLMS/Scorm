@@ -55,6 +55,11 @@ trait ScormTestTrait
         return $scorm;
     }
 
+    protected function createManyScos(int $count): Collection
+    {
+        return Collection::times($count, fn() => $this->createScormSco());
+    }
+
     protected function createScormSco(): ScormScoModel
     {
         $scormSco = new ScormScoModel();
