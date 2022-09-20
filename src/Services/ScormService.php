@@ -341,11 +341,18 @@ class ScormService implements ScormServiceContract
         return $zipFilePath;
     }
 
-    public function listModels($per_page = 15, array $columns = ['*']): LengthAwarePaginator
+    public function listModelsPaginated($per_page = 15, array $columns = ['*']): LengthAwarePaginator
     {
         return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
             ->select($columns)
             ->paginate(intval($per_page));
+    }
+
+    public function listModels(array $columns = ['*']): Collection
+    {
+        return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
+            ->select($columns)
+            ->get();
     }
 
     public function listScoModels(array $columns = ['*']): Collection

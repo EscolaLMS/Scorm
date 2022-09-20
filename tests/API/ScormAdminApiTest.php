@@ -82,6 +82,24 @@ class ScormAdminApiTest extends TestCase
         ]);
     }
 
+    public function test_get_model_list_paginated(): void
+    {
+        $this->createManyScorm(10);
+
+        $res = $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=5')
+            ->assertOk()
+            ->assertJsonCount(5, 'data.data');
+    }
+
+    public function test_get_model_list_unpaginated(): void
+    {
+        $this->createManyScorm(30);
+
+        $res = $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=0')
+            ->assertOk()
+            ->assertJsonCount(30, 'data.data');
+    }
+
     public function test_get_model_list(): void
     {
         $response = $this->uploadScorm();

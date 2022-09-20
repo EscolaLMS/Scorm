@@ -4,10 +4,8 @@ namespace EscolaLms\Scorm\Http\Controllers;
 
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormControllerContract;
 use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
-use EscolaLms\Scorm\Http\Requests\ScormReadRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
-use EscolaLms\Scorm\Services\Contracts\ScormTrackServiceContract;
 use Exception;
 use EscolaLms\Scorm\Http\Requests\ScormCreateRequest;
 use EscolaLms\Scorm\Http\Requests\ScormListRequest;
@@ -68,7 +66,10 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 
     public function index(ScormListRequest $request): JsonResponse
     {
-        $list = $this->scormService->listModels($request->get('per_page'));
+        $list = $request->get('per_page') === null || $request->get('per_page') === "0"
+            ? ['data' => $this->scormService->listModels()]
+            : $this->scormService->listModelsPaginated($request->get('per_page'));
+
         return $this->sendResponse($list, "Scorm list fetched successfully");
     }
 

@@ -4,6 +4,7 @@ namespace EscolaLms\Scorm\Tests;
 
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Testing\TestResponse;
 use Peopleaps\Scorm\Entity\Scorm;
 use Peopleaps\Scorm\Model\ScormModel;
@@ -33,11 +34,15 @@ trait ScormTestTrait
         return new UploadedFile($storagePath, $fileName, 'application/zip', null, true);
     }
 
+    protected function createManyScorm(int $count): Collection
+    {
+        return Collection::times($count, fn() => $this->createScorm());
+    }
+
     protected function createScorm(): ScormModel
     {
         $versions = [Scorm::SCORM_12, Scorm::SCORM_2004];
         $uuid = $this->faker->uuid;
-
 
         $scorm = new ScormModel();
         $scorm->version = $this->faker->randomElement($versions);
