@@ -4,6 +4,7 @@ namespace EscolaLms\Scorm\Http\Controllers;
 
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormControllerContract;
 use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
+use EscolaLms\Scorm\Services\Contracts\ScormQueryServiceContract;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
 use Exception;
@@ -18,11 +19,15 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 {
     private ScormServiceContract $scormService;
 
+    private ScormQueryServiceContract $scormQueryService;
+
     public function __construct(
-        ScormServiceContract $scormService
+        ScormServiceContract $scormService,
+        ScormQueryServiceContract $scormQueryService
     )
     {
         $this->scormService = $scormService;
+        $this->scormQueryService = $scormQueryService;
     }
 
     public function upload(ScormCreateRequest $request): JsonResponse
@@ -66,10 +71,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 
     public function index(ScormListRequest $request): JsonResponse
     {
-        $list = $request->get('per_page') === null || $request->get('per_page') === "0"
-            ? ['data' => $this->scormService->listModels()]
-            : $this->scormService->listModelsPaginated($request->get('per_page'));
-
+        $list = $this->scormQueryService->get($request->pageParams(), ['*'], $request->searchParams());
         return $this->sendResponse($list, "Scorm list fetched successfully");
     }
 
@@ -85,7 +87,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             "sco_parameters"
         ];
 
-        $list = $this->scormService->listScoModels($columns);
+        $list = $this->scormQueryService->allScos($columns);
         return $this->sendResponse($list, "Scos list fetched successfully");
     }
 

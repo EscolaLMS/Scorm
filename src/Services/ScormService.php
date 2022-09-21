@@ -21,7 +21,6 @@ use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 use Ramsey\Uuid\Uuid;
 use ZipArchive;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
-use \Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ScormService implements ScormServiceContract
 {
@@ -300,7 +299,7 @@ class ScormService implements ScormServiceContract
     {
         $scorm = ScormModel::find($id);
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
-        $scormFilePath =  $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
+        $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
 
         if (Storage::disk('local')->exists($scormFilePath)) {
             return $scormFilePath;
@@ -313,7 +312,7 @@ class ScormService implements ScormServiceContract
     {
         $scormDisk = Storage::disk(config('scorm.disk'));
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
-        $scormFilePath =  $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
+        $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
         $files = array_filter($scormDisk->allFiles($scormPath), fn($item) => $item !== $scormFilePath);
 
         if (!Storage::disk('local')->exists('scorm/exports')) {
@@ -331,7 +330,7 @@ class ScormService implements ScormServiceContract
         foreach ($files as $file) {
             $prefix = 'scorm/' . $scorm->version . DIRECTORY_SEPARATOR . $scorm->uuid . DIRECTORY_SEPARATOR;
             $dir = str_replace($prefix, "", $file);
-            if (! $zip->addFile($scormDisk->path($file), $dir)) {
+            if (!$zip->addFile($scormDisk->path($file), $dir)) {
                 throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
             }
         }
@@ -339,27 +338,6 @@ class ScormService implements ScormServiceContract
         $zip->close();
 
         return $zipFilePath;
-    }
-
-    public function listModelsPaginated($per_page = 15, array $columns = ['*']): LengthAwarePaginator
-    {
-        return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
-            ->select($columns)
-            ->paginate(intval($per_page));
-    }
-
-    public function listModels(array $columns = ['*']): Collection
-    {
-        return ScormModel::with(['scos' => fn($query) => $query->select(['*'])->where('block', '=', 0)])
-            ->select($columns)
-            ->get();
-    }
-
-    public function listScoModels(array $columns = ['*']): Collection
-    {
-        return ScormScoModel::query()
-            ->select($columns)
-            ->get();
     }
 
     private function getScormTrack(int $scoId, ?int $userId): ?ScormScoTrackingModel
@@ -396,14 +374,14 @@ class ScormService implements ScormServiceContract
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
         $data['lmsUrl'] = url('/api/scorm/track');
-        $data['player'] = (object) [
-            'autoCommit' => (bool) $token,
-            'lmsCommitUrl' =>  $token ? url('/api/scorm/track', $data->uuid) : false,
+        $data['player'] = (object)[
+            'autoCommit' => (bool)$token,
+            'lmsCommitUrl' => $token ? url('/api/scorm/track', $data->uuid) : false,
             'xhrHeaders' => [
                 'Authorization' => $token ? ('Bearer ' . $token) : null
             ],
             'logLevel' => 1,
-            'autoProgress' => (bool) $token,
+            'autoProgress' => (bool)$token,
             'cmi' => $cmi,
         ];
 
