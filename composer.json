@@ -14,10 +14,12 @@
         "orchestra/testbench": "^6"
     },
     "license": "Apache-2.0",
-    "authors": [{
-        "name": "Mateusz Wojczal",
-        "email": "mateusz@escolasoft.pl"
-    }],
+    "authors": [
+        {
+            "name": "Mateusz Wojczal",
+            "email": "mateusz@escolasoft.pl"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "EscolaLms\\Scorm\\": "src",
@@ -30,6 +32,11 @@
             "providers": [
                 "EscolaLms\\Scorm\\EscolaLmsScormServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }
