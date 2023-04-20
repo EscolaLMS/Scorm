@@ -8,6 +8,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use EscolaLms\Scorm\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
+use Peopleaps\Scorm\Entity\Scorm;
+use Peopleaps\Scorm\Model\ScormModel;
 use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormAdminApiTest extends TestCase
@@ -98,6 +100,51 @@ class ScormAdminApiTest extends TestCase
         $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=0')
             ->assertOk()
             ->assertJsonCount(30, 'data.data');
+    }
+
+    public function test_get_model_list_with_sorts(): void
+    {
+        $scormOne = $this->createScorm();
+        $scormOne->version = Scorm::SCORM_12;
+        $scormOne->save();
+
+        $scormTwo = $this->createScorm();
+        $scormTwo->version = Scorm::SCORM_2004;
+        $scormTwo->save();
+
+
+        $response = $this->actingAs($this->user, 'api')->json('GET', '/api/admin/scorm', [
+            'order_by' => 'version',
+            'order' => 'ASC',
+        ]);
+
+        $this->assertTrue($response->getData()->data->data[0]->version === Scorm::SCORM_12);
+        $this->assertTrue($response->getData()->data->data[1]->version === Scorm::SCORM_2004);
+
+        $response = $this->actingAs($this->user, 'api')->json('GET', '/api/admin/scorm', [
+            'order_by' => 'version',
+            'order' => 'DESC',
+        ]);
+
+        $this->assertTrue($response->getData()->data->data[0]->version === Scorm::SCORM_2004);
+        $this->assertTrue($response->getData()->data->data[1]->version === Scorm::SCORM_12);
+
+        $response = $this->actingAs($this->user, 'api')->json('GET', '/api/admin/scorm', [
+            'order_by' => 'id',
+            'order' => 'ASC',
+        ]);
+
+        $this->assertTrue($response->getData()->data->data[0]->id === $scormOne->getKey());
+        $this->assertTrue($response->getData()->data->data[1]->id === $scormTwo->getKey());
+
+        $response = $this->actingAs($this->user, 'api')->json('GET', '/api/admin/scorm', [
+            'order_by' => 'id',
+            'order' => 'DESC',
+        ]);
+
+        $this->assertTrue($response->getData()->data->data[0]->id === $scormTwo->getKey());
+        $this->assertTrue($response->getData()->data->data[1]->id === $scormOne->getKey());
+
     }
 
     public function test_search_model_list(): void

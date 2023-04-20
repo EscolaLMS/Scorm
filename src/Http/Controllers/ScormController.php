@@ -2,6 +2,7 @@
 
 namespace EscolaLms\Scorm\Http\Controllers;
 
+use EscolaLms\Core\Dtos\OrderDto;
 use EscolaLms\Scorm\Http\Controllers\Swagger\ScormControllerContract;
 use EscolaLms\Scorm\Http\Requests\ScormDeleteRequest;
 use EscolaLms\Scorm\Services\Contracts\ScormQueryServiceContract;
@@ -71,7 +72,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 
     public function index(ScormListRequest $request): JsonResponse
     {
-        $list = $this->scormQueryService->get($request->pageParams(), ['*'], $request->searchParams());
+        $list = $this->scormQueryService->get($request->pageParams(), ['*'], $request->searchParams(), OrderDto::instantiateFromRequest($request));
         return $this->sendResponse($list, "Scorm list fetched successfully");
     }
 
