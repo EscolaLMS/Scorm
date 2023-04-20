@@ -2,6 +2,7 @@
 
 namespace EscolaLms\Scorm\Services;
 
+use EscolaLms\Core\Dtos\OrderDto;
 use EscolaLms\Scorm\Repositories\Contracts\ScormRepositoryContract;
 use EscolaLms\Scorm\Services\Contracts\ScormQueryServiceContract;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,24 +18,26 @@ class ScormQueryService implements ScormQueryServiceContract
         $this->scormRepository = $scormRepository;
     }
 
-    public function get($per_page = 15, array $columns = ['*'], ?array $search = [])
+    public function get($per_page = 15, array $columns = ['*'], ?array $search = [], ?OrderDto $orderDto = null)
     {
         return $per_page === null || $per_page === 0
-            ? ['data' => $this->all($columns, $search)]
-            : $this->paginated(intval($per_page), $columns, $search);
+            ? ['data' => $this->all($columns, $search, $orderDto)]
+            : $this->paginated(intval($per_page), $columns, $search, $orderDto);
     }
 
-    public function paginated($per_page = 15, array $columns = ['*'], ?array $search = []): LengthAwarePaginator
+    public function paginated($per_page = 15, array $columns = ['*'], ?array $search = [], ?OrderDto $orderDto = null): LengthAwarePaginator
     {
         return $this->scormRepository
             ->listQuery($columns, $search)
+            ->orderBy($orderDto?->getOrderBy() ?? 'id', $orderDto?->getOrder() ?? 'desc')
             ->paginate(intval($per_page));
     }
 
-    public function all(array $columns = ['*'], ?array $search = []): Collection
+    public function all(array $columns = ['*'], ?array $search = [], ?OrderDto $orderDto = null): Collection
     {
         return $this->scormRepository
             ->listQuery($columns, $search)
+            ->orderBy($orderDto?->getOrderBy() ?? 'id', $orderDto?->getOrder() ?? 'desc')
             ->get();
     }
 
