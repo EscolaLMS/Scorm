@@ -42,7 +42,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             return $this->sendError($error->getMessage(), 422);
         }
 
-        return $this->sendResponse($data, "Scorm Package uploaded successfully");
+        return $this->sendResponse($data, 'Scorm Package uploaded successfully');
     }
 
     public function parse(ScormCreateRequest $request): JsonResponse
@@ -56,7 +56,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             $this->sendError($error->getMessage(), 422);
         }
 
-        return $this->sendResponse($data, "Scorm Package uploaded successfully");
+        return $this->sendResponse($data, 'Scorm Package uploaded successfully');
     }
 
     public function show(string $uuid, Request $request): View
@@ -73,28 +73,31 @@ class ScormController extends EscolaLmsBaseController implements ScormController
     public function index(ScormListRequest $request): JsonResponse
     {
         $list = $this->scormQueryService->get($request->pageParams(), ['*'], $request->searchParams(), OrderDto::instantiateFromRequest($request));
-        return $this->sendResponse($list, "Scorm list fetched successfully");
+
+        return $this->sendResponse($list, 'Scorm list fetched successfully');
     }
 
     public function getScos(ScormListRequest $request): JsonResponse
     {
         $columns = [
-            "id",
-            "scorm_id",
-            "uuid",
-            "entry_url",
-            "identifier",
-            "title",
-            "sco_parameters"
+            'id',
+            'scorm_id',
+            'uuid',
+            'entry_url',
+            'identifier',
+            'title',
+            'sco_parameters',
         ];
 
         $list = $this->scormQueryService->allScos($columns);
-        return $this->sendResponse($list, "Scos list fetched successfully");
+
+        return $this->sendResponse($list, 'Scos list fetched successfully');
     }
 
     public function delete(ScormDeleteRequest $request, ScormModel $scormModel): JsonResponse
     {
         $this->scormService->deleteScormData($scormModel);
-        return $this->sendSuccess("Scorm Package deleted successfully");
+
+        return $this->sendSuccess('Scorm Package deleted successfully');
     }
 }

@@ -2,27 +2,18 @@
 
 namespace EscolaLms\Scorm\Http\Requests;
 
-use EscolaLms\Core\Models\User;
 use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
+use Peopleaps\Scorm\Model\ScormModel;
 
 class ScormListRequest extends FormRequest
 {
-    /**
-     * @return bool
-     */
     public function authorize(): bool
     {
-        /** @var User $user */
-        $user = $this->user();
-        return $user->can(ScormPermissionsEnum::SCORM_LIST, 'api');
+        return Gate::allows('list', ScormModel::class);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [];
@@ -35,8 +26,14 @@ class ScormListRequest extends FormRequest
             : $this->get('per_page');
     }
 
-    public function searchParams(): ?array
+    public function searchParams(): array
     {
-        return $this->except(['limit', 'skip', 'order', 'order_by']);
+        $search = $this->except(['limit', 'skip', 'order', 'order_by']);
+
+        if (!$this->user()->can(ScormPermissionsEnum::SCORM_LIST) && $this->user()->can(ScormPermissionsEnum::SCORM_LIST_OWN)) {
+            $search['user_id'] = $this->user()->getKey();
+        }
+
+        return $search;
     }
 }

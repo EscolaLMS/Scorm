@@ -13,38 +13,29 @@ class ScormPolicy
 
     public function list(User $user): bool
     {
-        return $user->can(ScormPermissionsEnum::SCORM_LIST);
+        return $user->canAny([
+            ScormPermissionsEnum::SCORM_LIST,
+            ScormPermissionsEnum::SCORM_LIST_OWN,
+        ]);
     }
 
-    public function read(User $user): bool
+    public function read(User $user, ScormModel $scorm): bool
     {
-        return $user->can(ScormPermissionsEnum::SCORM_READ);
+        return $user->can(ScormPermissionsEnum::SCORM_READ)
+            || ($user->can(ScormPermissionsEnum::SCORM_READ_OWN) && $scorm->user_id === $user->getKey());
     }
 
-    /**
-     * @param User $user
-     * @return bool
-     */
     public function create(User $user): bool
     {
         return $user->can(ScormPermissionsEnum::SCORM_CREATE);
     }
 
-    /**
-     * @param User $user
-     * @param ScormModel $scorm
-     * @return bool
-     */
     public function delete(User $user, ScormModel $scorm): bool
     {
-        return $user->can(ScormPermissionsEnum::SCORM_DELETE);
+        return $user->can(ScormPermissionsEnum::SCORM_DELETE)
+            || ($user->can(ScormPermissionsEnum::SCORM_DELETE_OWN) && $scorm->user_id === $user->getKey());
     }
 
-    /**
-     * @param User $user
-     * @param ScormModel $scorm
-     * @return bool
-     */
     public function update(User $user, ScormModel $scorm): bool
     {
         return $user->can(ScormPermissionsEnum::SCORM_UPDATE);
