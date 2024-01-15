@@ -35,4 +35,9 @@ class EscolaLmsScormServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'scorm');
     }
+
+    public function register(): void
+    {
+        $this->app->register(AuthServiceProvider::class);
+    }
 }

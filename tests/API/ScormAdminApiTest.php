@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Scorm\Tests\ScormTestTrait;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -14,7 +15,7 @@ use Peopleaps\Scorm\Model\ScormScoModel;
 
 class ScormAdminApiTest extends TestCase
 {
-    use DatabaseTransactions, ScormTestTrait, WithFaker;
+    use DatabaseTransactions, ScormTestTrait, WithFaker, CreatesUsers;
 
     public function test_content_upload(): void
     {
@@ -23,6 +24,7 @@ class ScormAdminApiTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertEquals($data->data->scormData->scos[0]->title, "Employee Health and Wellness (Sample Course)");
+        $this->assertEquals($this->user->getKey(), $data->data->model->user_id);
     }
 
     public function test_content_upload_invalid_data(): void
@@ -84,6 +86,27 @@ class ScormAdminApiTest extends TestCase
         ]);
     }
 
+    public function test_delete_owned_scorm(): void
+    {
+        $tutor = $this->makeInstructor();
+        $scorm = $this->createScorm();
+
+        $this->actingAs($tutor, 'api')
+            ->deleteJson('/api/admin/scorm/' . $scorm->getKey())
+            ->assertForbidden();
+
+        $scorm->user_id = $tutor->getKey();
+        $scorm->save();
+
+        $this->actingAs($tutor, 'api')
+            ->deleteJson('/api/admin/scorm/' . $scorm->getKey())
+            ->assertOk();
+
+        $this->assertDatabaseMissing('scorm', [
+            'id' => $scorm->id,
+        ]);
+    }
+
     public function test_get_model_list_paginated(): void
     {
         $this->createManyScorm(10);
@@ -91,6 +114,21 @@ class ScormAdminApiTest extends TestCase
         $this->actingAs($this->user, 'api')->get('/api/admin/scorm?per_page=5')
             ->assertOk()
             ->assertJsonCount(5, 'data.data');
+    }
+
+    public function test_get_owned_scorm_list_paginated(): void
+    {
+        $this->createManyScorm(10);
+        $owner = $this->makeInstructor();
+        $this->createManyScorm(5)->each(function (ScormModel $scorm) use ($owner) {
+            $scorm->user_id = $owner->getKey();
+            $scorm->save();
+        });
+
+        $this->actingAs($owner, 'api')->get('/api/admin/scorm?per_page=15')
+            ->assertOk()
+            ->assertJsonCount(5, 'data.data')
+            ->assertJsonPath('data.total', 5);
     }
 
     public function test_get_model_list_unpaginated(): void

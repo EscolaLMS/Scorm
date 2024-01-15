@@ -34,7 +34,8 @@ class ScormRepository extends BaseRepository implements ScormRepositoryContract
             ->select($columns)
             ->when(isset($search['search']), fn($query) => $query
                 ->whereHas('scos', fn($query) => $query->where('title', $this->likeOperator(), '%' . $search['search'] . '%'))
-            );
+            )
+            ->when(isset($search['user_id']), fn($query) => $query->where('user_id', $search['user_id']));
     }
 
     private function likeOperator(): string

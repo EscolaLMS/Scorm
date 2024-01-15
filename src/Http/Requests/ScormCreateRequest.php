@@ -2,27 +2,17 @@
 
 namespace EscolaLms\Scorm\Http\Requests;
 
-use EscolaLms\Core\Models\User;
-use EscolaLms\Scorm\Enums\ScormPermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
+use Peopleaps\Scorm\Model\ScormModel;
 
 class ScormCreateRequest extends FormRequest
 {
-    /**
-     * @return bool
-     */
     public function authorize(): bool
     {
-        /** @var User $user */
-        $user = $this->user();
-        return $user->can(ScormPermissionsEnum::SCORM_CREATE, 'api');
+        return Gate::allows('create', ScormModel::class);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [

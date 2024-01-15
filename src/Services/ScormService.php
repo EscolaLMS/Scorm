@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Peopleaps\Scorm\Entity\Scorm;
@@ -64,6 +65,7 @@ class ScormService implements ScormServiceContract
             $scorm->origin_file = $scormData['name'];
             $scorm->origin_file_mime = $scormData['type'];
             $scorm->uuid = $scormData['hashName'];
+            $scorm->user_id = Auth::user() ? Auth::user()->getKey() : null;
             $scorm->save();
 
             $this->saveToDb($scormData['scos'], $scorm);

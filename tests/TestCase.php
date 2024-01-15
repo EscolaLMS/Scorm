@@ -2,6 +2,7 @@
 
 namespace EscolaLms\Scorm\Tests;
 
+use EscolaLms\Auth\Models\User;
 use EscolaLms\Scorm\AuthServiceProvider;
 use EscolaLms\Scorm\Database\Seeders\PermissionTableSeeder;
 use EscolaLms\Scorm\EscolaLmsScormServiceProvider;
@@ -52,7 +53,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
                 'disk' => 'local'
             ]
         );
-
+        $app['config']->set('auth.providers.users.model', User::class);
     }
 
     protected function authenticateAsAdmin()
