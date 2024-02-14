@@ -4,7 +4,7 @@
     "type": "package",
     "require": {
         "php": ">=7.4",
-        "devianl2/laravel-scorm": "^2.0",
+        "devianl2/laravel-scorm": "^4",
         "laravel/framework": ">=8.0",
         "escolalms/core": "^1",
         "escolalms/auth": "^0"
