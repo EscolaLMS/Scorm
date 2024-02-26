@@ -22,6 +22,8 @@ use Peopleaps\Scorm\Model\ScormScoTrackingModel;
 use Ramsey\Uuid\Uuid;
 use ZipArchive;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use Illuminate\Http\File;
+
 
 class ScormService implements ScormServiceContract
 {
@@ -36,8 +38,7 @@ class ScormService implements ScormServiceContract
      */
     public function __construct(
         ScormTrackServiceContract $scormTrackService
-    )
-    {
+    ) {
         $this->scormLib = new ScormLib();
         $this->scormTrackService = $scormTrackService;
     }
@@ -228,7 +229,17 @@ class ScormService implements ScormServiceContract
             Storage::disk(config('scorm.disk'))->makeDirectory($hashName);
         }
 
-        $zip->extractTo(Storage::disk(config('scorm.disk'))->path($hashName));
+        $zip->extractTo(sys_get_temp_dir() . '/' .  $hashName);
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+
+            $fileName = $zip->getNameIndex($i);
+            $f = sys_get_temp_dir() . '/' .  $hashName . '/' . $fileName;
+            if (is_file($f) && !is_dir($f)) {
+                Storage::disk(config('scorm.disk'))->putFileAs($hashName, new File($f), $fileName);
+            }
+            unlink($f);
+        }
         $zip->close();
     }
 
@@ -244,6 +255,7 @@ class ScormService implements ScormServiceContract
         $scormData = $this->parseScormArchive($file);
         $scormFilePath = 'scorm/' . $scormData['version'] . '/' . $hashName;
         $this->unzipScormArchive($file, $scormFilePath);
+
 
         if (!config()->has('filesystems.disks.' . config('scorm.disk') . '.root')) {
             throw new StorageNotFoundException();
@@ -315,7 +327,7 @@ class ScormService implements ScormServiceContract
         $scormDisk = Storage::disk(config('scorm.disk'));
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
         $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
-        $files = array_filter($scormDisk->allFiles($scormPath), fn($item) => $item !== $scormFilePath);
+        $files = array_filter($scormDisk->allFiles($scormPath), fn ($item) => $item !== $scormFilePath);
 
         if (!Storage::disk('local')->exists('scorm/exports')) {
             Storage::disk('local')->makeDirectory('scorm/exports');
