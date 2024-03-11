@@ -49,7 +49,7 @@ class ScormAdminApiTest extends TestCase
             ]);
 
         $response->assertUnprocessable();
-        $response->assertJsonValidationErrors(['zip' => 'The zip field must be a file of type: zip.']);
+        $response->assertJsonValidationErrors(['zip' => 'must be a file of type: zip.']);
     }
 
     public function test_content_parse(): void
