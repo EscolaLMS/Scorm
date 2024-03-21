@@ -238,7 +238,7 @@ class ScormService implements ScormServiceContract
             if (is_file($f) && !is_dir($f)) {
                 Storage::disk(config('scorm.disk'))->putFileAs($hashName, new File($f), $fileName);
             }
-            unlink($f);
+            Storage::delete($f);
         }
         $zip->close();
     }
