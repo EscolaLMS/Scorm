@@ -1,0 +1,11 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - src/
+
+    # The level 9 is the highest level
+    # next levels have errors mainly concerning Peopleaps Scorm
+    level: 1
