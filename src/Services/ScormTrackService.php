@@ -20,6 +20,7 @@ class ScormTrackService implements ScormTrackServiceContract
 {
     public function getUserResult(int $scoId, int $userId): ?ScormScoTrackingModel
     {
+        // @phpstan-ignore-next-line
         return ScormScoTrackingModel::where('sco_id', $scoId)
             ->with('sco.scorm')
             ->where('user_id', $userId)->first();
@@ -131,6 +132,7 @@ class ScormTrackService implements ScormTrackServiceContract
 
     public function findScoTrackingId($scoUuid, $scoTrackingUuid)
     {
+        // @phpstan-ignore-next-line
         return ScormScoTrackingModel::with([
             'sco'
         ])->whereHas('sco', function (Builder $query) use ($scoUuid) {

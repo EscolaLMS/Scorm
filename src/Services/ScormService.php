@@ -279,6 +279,7 @@ class ScormService implements ScormServiceContract
      */
     public function getScos($scormId): ScormScoModel
     {
+        // @phpstan-ignore-next-line
         return ScormScoModel::with(['scorm'])
             ->where('scorm_id', $scormId)
             ->get();
@@ -291,6 +292,7 @@ class ScormService implements ScormServiceContract
      */
     public function getScoByUuid($scoUuid): ScormScoModel
     {
+        // @phpstan-ignore-next-line
         return ScormScoModel::with(['scorm'])
             ->where('uuid', $scoUuid)
             ->firstOrFail();

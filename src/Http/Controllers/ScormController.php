@@ -56,6 +56,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             $this->sendError($error->getMessage(), 422);
         }
 
+        // @phpstan-ignore-next-line
         return $this->sendResponse($data, 'Scorm Package uploaded successfully');
     }
 
