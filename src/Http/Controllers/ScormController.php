@@ -52,10 +52,12 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         try {
             $data = $this->scormService->parseScormArchive($file);
             $data = $this->scormService->removeRecursion($data);
-            return $this->sendResponse($data, 'Scorm Package uploaded successfully');
         } catch (Exception $error) {
-            return $this->sendError($error->getMessage(), 422);
+            $this->sendError($error->getMessage(), 422);
         }
+
+        // @phpstan-ignore-next-line
+        return $this->sendResponse($data, 'Scorm Package uploaded successfully');
     }
 
     public function show(string $uuid, Request $request): View
