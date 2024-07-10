@@ -332,5 +332,11 @@
                 ]
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "SCORM",
+            "description": "SCORM"
+        }
+    ]
 }
