@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>SCORM 1.2 </title>
-  <script src="https://cdn.jsdelivr.net/npm/scorm-again@latest/dist/scorm-again.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/scorm-again@2.2.0/dist/scorm-again.js"></script>
   <style>
     html,body,iframe { width: 100%; height: 100%; padding: 0; margin: 0; border: none}
     iframe { display:block }
