@@ -142,7 +142,48 @@ interface ScormControllerContract
      * @param Request $request
      * @return View
      */
-    public function show(string $uuid, Request $request): View;
+    public function showView(string $uuid, Request $request): View;
+
+    /**
+     * @OA\Get(
+     *     path="/api/scorm/show/{uuid}",
+     *     summary="Read a page identified by a given slug identifier",
+     *     tags={"SCORM"},
+     *     security={
+     *         {"passport": {}},
+     *     },
+     *     @OA\Parameter(
+     *         description="Unique uuid scorm identifier",
+     *         in="path",
+     *         name="uuid",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="",
+     *      ),
+     *     @OA\Response(
+     *          response=401,
+     *          description="endpoint requires authentication",
+     *     ),
+     *     @OA\Response(
+     *          response=403,
+     *          description="user doesn't have required access rights",
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="server-side error",
+     *      ),
+     * )
+     *
+     * @param string $uuid
+     * @param Request $request
+     * @return View
+     */
+    public function showJson(string $uuid, Request $request): JsonResponse;
 
     /**
      * @OA\Get(

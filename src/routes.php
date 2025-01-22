@@ -15,7 +15,9 @@ Route::group(['prefix' => 'api/admin/scorm', 'middleware' => ['auth:api', Substi
 });
 
 Route::group(['prefix' => 'api/scorm'], function () {
-    Route::get('/play/{uuid}', [ScormController::class, "show"]);
+    Route::get('/play/{uuid}', [ScormController::class, "showView"]);
+    Route::get('/service-worker', [ScormController::class, "showViewServiceWorker"]);
+    Route::get('/show/{uuid}', [ScormController::class, "showJson"]);
 
     Route::group(['prefix' => '/track', 'middleware' => ['auth:api', SubstituteBindings::class]], function () {
         Route::post('/{uuid}', [ScormTrackController::class, 'set']);

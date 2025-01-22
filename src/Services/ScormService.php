@@ -45,6 +45,7 @@ class ScormService implements ScormServiceContract
 
     public function uploadScormArchive(UploadedFile $file): array
     {
+
         // Checks if it is a valid scorm archive
         $zip = new ZipArchive();
         $openValue = $zip->open($file);
@@ -71,6 +72,9 @@ class ScormService implements ScormServiceContract
 
             $this->saveToDb($scormData['scos'], $scorm);
         }
+
+        // Upload serviceworker.js to s3 bucket in case of s3 disk
+        $this->uploadServiceWorkerToBucket();
 
         return [
             'scormData' => $scormData,
@@ -324,12 +328,26 @@ class ScormService implements ScormServiceContract
         return $this->zipScormFiles($scorm);
     }
 
+    public function uploadServiceWorkerToBucket(): bool
+    {
+        if (config('scorm.disk') === 's3') {
+            $scormDisk = Storage::disk(config('scorm.disk'));
+            $folder = __DIR__ . '/../../resources';
+            $files = [...glob($folder . '/*/*/*.js'), ...glob($folder . '/*/*.js')];
+            foreach ($files as $file) {
+                $scormDisk->put('scorm' . str_replace($folder, '', $file), file_get_contents($file));
+            }
+            //$scormDisk->put('scorm/serviceworker.js', file_get_contents(base_path('resources/js/serviceworker.js')));
+        }
+        return true;
+    }
+
     public function zipScormFiles(ScormModel $scorm): string
     {
         $scormDisk = Storage::disk(config('scorm.disk'));
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
         $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
-        $files = array_filter($scormDisk->allFiles($scormPath), fn ($item) => $item !== $scormFilePath);
+        $files = array_filter($scormDisk->allFiles($scormPath), fn($item) => $item !== $scormFilePath);
 
         if (!Storage::disk('local')->exists('scorm/exports')) {
             Storage::disk('local')->makeDirectory('scorm/exports');
@@ -385,10 +403,14 @@ class ScormService implements ScormServiceContract
     private function getScormPlayerConfig(ScormScoModel $data, ?int $userId = null, ?string $token = null): ScormScoModel
     {
         $cmi = $this->getScormTrackData($data, $userId);
+
+        $data['entry_url_zip'] = Storage::disk(config('scorm.disk'))
+            ->url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->scorm->uuid . ".zip");
         $data['entry_url_absolute'] = Storage::disk(config('scorm.disk'))
             ->url('scorm/' . $data->scorm->version . '/' . $data->scorm->uuid . '/' . $data->entry_url . $data->sco_parameters);
         $data['version'] = $data->scorm->version;
         $data['token'] = $token;
+        $data['serviceworker'] = Storage::disk(config('scorm.disk'))->url('scorm/serviceworker.js');
         $data['lmsUrl'] = url('/api/scorm/track');
         $data['player'] = (object)[
             'autoCommit' => (bool)$token,
