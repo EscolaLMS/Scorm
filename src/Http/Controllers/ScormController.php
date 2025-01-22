@@ -14,6 +14,9 @@ use EscolaLms\Scorm\Http\Requests\ScormListRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Response as ResponseFacade;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\View as ViewFacade;
 use Peopleaps\Scorm\Model\ScormModel;
 
 class ScormController extends EscolaLmsBaseController implements ScormControllerContract
@@ -25,8 +28,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
     public function __construct(
         ScormServiceContract $scormService,
         ScormQueryServiceContract $scormQueryService
-    )
-    {
+    ) {
         $this->scormService = $scormService;
         $this->scormQueryService = $scormQueryService;
     }
@@ -60,7 +62,7 @@ class ScormController extends EscolaLmsBaseController implements ScormController
         return $this->sendResponse($data, 'Scorm Package uploaded successfully');
     }
 
-    public function show(string $uuid, Request $request): View
+    public function showView(string $uuid, Request $request): View
     {
         $data = $this->scormService->getScoViewDataByUuid(
             $uuid,
@@ -68,7 +70,26 @@ class ScormController extends EscolaLmsBaseController implements ScormController
             $request->bearerToken()
         );
 
-        return view('scorm::player', ['data' => $data]);
+        return view(config('scorm.disk') === 's3' ? 'scorm::player-serverless' : 'scorm::player', ['data' => $data]);
+    }
+
+    public function showViewServiceWorker(): Response
+    {
+        $contents = ViewFacade::make('scorm::service-worker');
+        $response = ResponseFacade::make($contents, 200);
+        $response->header('Content-Type', 'application/javascript');
+        return $response;
+    }
+
+    public function showJson(string $uuid, Request $request): JsonResponse
+    {
+        $data = $this->scormService->getScoViewDataByUuid(
+            $uuid,
+            $request->user() ? $request->user()->getKey() : null,
+            $request->bearerToken()
+        );
+
+        return $this->sendResponse($data, 'Scorm object fetched successfully');
     }
 
     public function index(ScormListRequest $request): JsonResponse
