@@ -29,111 +29,6 @@
                 display: block;
             }
         </style>
-
-        <!-- <script type="text/javascript">
-        const settings = @json($data);
-        const token = settings.token;
-        const cmi = settings.player.cmi;
-
-        if (settings.version === 'scorm_12') {
-            scorm12();
-        } else if (settings.version === 'scorm_2004') {
-            scorm2004();
-        }
-
-        function scorm12() {
-            window.API = new Scorm12API(settings.player);
-            window.API.loadFromJSON(cmi);
-
-            window.API.on('LMSSetValue.cmi.*', function(CMIElement, value) {
-                const data = {
-                    cmi: {
-                        [CMIElement]: value
-                    }
-                }
-
-                post(data);
-            });
-
-            // window.API.on('LMSGetValue.cmi.*', function(CMIElement) {
-            //     get(CMIElement)
-            //         .then(res => res.json())
-            //         .then(res => {
-            //             window.API.LMSSetValue(CMIElement, res)
-            //         })
-            // });
-
-            window.API.on('LMSCommit', function() {
-                const data = {
-                    cmi: window.API.cmi
-                }
-
-                post(data);
-            });
-        }
-
-        function scorm2004() {
-            window.API_1484_11 = new Scorm2004API(settings.player);
-            window.API_1484_11.loadFromJSON(cmi);
-
-            window.API_1484_11.on('SetValue.cmi.*', function(CMIElement, value) {
-                const data = {
-                    cmi: {
-                        [CMIElement]: value
-                    }
-                }
-
-                post(data);
-            });
-
-            // window.API_1484_11.on('GetValue.cmi.*', function(CMIElement) {
-            //     get(CMIElement)
-            //         .then(res => res.json())
-            //         .then(res => {
-            //             window.API_1484_11.SetValue(CMIElement, res)
-            //         });
-            // });
-
-            window.API_1484_11.on('Commit', function() {
-                const data = {
-                    cmi: window.API_1484_11.cmi
-                }
-
-                post(data);
-            });
-        }
-
-        function post(data) {
-            if (!token) {
-                return;
-            }
-
-            fetch(settings.lmsUrl + '/' + settings.uuid, {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                },
-                body: JSON.stringify(data)
-            });
-        }
-
-        function get(key) {
-            if (!token) {
-                return;
-            }
-
-            return fetch(settings.lmsUrl + '/' + settings.scorm_id + '/' + key, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                }
-            });
-        }
-    </script> -->
     </head>
 
     <body>
@@ -141,8 +36,6 @@
         <script type="module">
             function scorm12(settings) {
                 window.API = new Scorm12API(settings);
-                //window.API.loadFromJSON(cmi);
-
                 window.API.on(
                     "LMSSetValue.cmi.*",
                     function (CMIElement, value) {
@@ -212,6 +105,9 @@
             }
 
             function post(data) {
+                // TODO: Implement your BACKEND endpoint for set data:
+                // this is authenticated endpoint  Route::post('/{uuid}', [ScormTrackController::class, 'set']);
+
                 console.log(
                     "TODO: Implement your BACKEND endpoint for set data:",
                     data
@@ -222,6 +118,8 @@
             }
 
             function get(key) {
+                // TODO: Implement your BACKEND endpoint for get key:
+                // this is authenticated endpoint  Route::get('/{scoId}/{key}', [ScormTrackController::class, 'get']);
                 console.log(
                     "TODO: Implement your BACKEND endpoint for get key:",
                     key
@@ -234,9 +132,8 @@
             navigator.serviceWorker.addEventListener("message", (event) => {
                 const scormObj = event.data.scormObj;
                 // Those Settings should be fetched from the backend
-                const settings = @json($data);
 
-                console.log("settings", settings);
+                const settings = window.ScormSettings.data;
 
                 if (scormObj.version === "2004") {
                     scorm2004(settings);
@@ -246,10 +143,7 @@
                     scorm12(settings);
                 }
 
-                const scoEl = document.getElementById("scos");
                 const iframeEl = document.getElementById("iframe_el");
-
-                scoEl.innerHTML == "";
 
                 loading(false);
 
@@ -257,9 +151,6 @@
                 iframe.src = `${scormObj.PREFIX}/${settings.entry_url}`;
                 iframeEl.innerHTML = "";
                 iframeEl.appendChild(iframe);
-
-
-
             });
 
             function register(url = "serviceworker.js") {
@@ -286,28 +177,27 @@
 
             function loadScormSCO(uuid, registration, retry = true) {
                 fetch(`/api/scorm/show/${uuid}`)
-                        .then((res) => res.json())
-                        .then(async(res) => {
-                            const zipUrl = res.data.entry_url_zip;
-                            // 4. check if zip file exists
-                            const exists = await fetch(zipUrl, { method: "HEAD" })
+                    .then((res) => res.json())
+                    .then(async (settings) => {
+                        window.ScormSettings = settings;
+                        const zipUrl = settings.data.entry_url_zip;
+                        // 4. check if zip file exists
+                        const exists = await fetch(zipUrl, { method: "HEAD" });
+                        if (exists.ok) {
+                            // 4a. send zip url to service worker
+                            registration.active.postMessage(zipUrl);
+                        } else {
+                            // 4b. create zip file
+                            const exists = await fetch(
+                                `/api/scorm/zip/${uuid}`
+                            );
                             if (exists.ok) {
-                                // 4a. send zip url to service worker
-                                registration.active.postMessage(zipUrl);
-                            } else {
-                                console.log("zip file not exists");
-                                const exists = await fetch(`/api/scorm/zip/${uuid}`)
-                                if (exists.ok) {
-                                    console.log("zip file created");
-                                    retry && loadScormSCO(uuid, registration, false);
-                                }
-
-                                // 4b. create zip file
+                                // 5b. zip created, recall function
+                                retry &&
+                                    loadScormSCO(uuid, registration, false);
                             }
-
-
-                            console.log("res", res);
-                        });
+                        }
+                    });
             }
 
             function init() {
@@ -316,25 +206,14 @@
                 // 2. register service worker
                 register("/api/scorm/service-worker").then((reg) => {
                     navigator.serviceWorker.ready.then((registration) => {
-                        //console.log("ready", registration);
-                        //loading(false);
                         loadScormSCO("{{$data['uuid']}}", registration);
-                        //registration.active.postMessage("{{ $data['entry_url_zip'] }}");
                         loading(true);
                     });
-                })
-
+                });
             }
 
             init();
         </script>
-        <div id="scos"></div>
         <div id="iframe_el"></div>
-        <pre>
-            @php
-                print_r($data['uuid']);
-            @endphp
-        </pre>
-        <!-- <iframe src={{ $data['entry_url_absolute'] }}></iframe> -->
     </body>
 </html>

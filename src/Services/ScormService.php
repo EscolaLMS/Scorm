@@ -351,6 +351,20 @@ class ScormService implements ScormServiceContract
         return $this->zipScormFiles($scorm);
     }
 
+    public function uploadServiceWorkerToBucket(): bool
+    {
+        if (config('scorm.disk') === 's3') {
+            $scormDisk = Storage::disk(config('scorm.disk'));
+            $folder = __DIR__ . '/../../resources';
+            $files = [...glob($folder . '/*/*/*.js'), ...glob($folder . '/*/*.js')];
+            foreach ($files as $file) {
+                $scormDisk->put('scorm' . str_replace($folder, '', $file), file_get_contents($file));
+            }
+            //$scormDisk->put('scorm/serviceworker.js', file_get_contents(base_path('resources/js/serviceworker.js')));
+        }
+        return true;
+    }
+
     public function zipScormFiles(ScormModel $scorm): string
     {
         $isLocal = config('scorm.disk') === 'local';
