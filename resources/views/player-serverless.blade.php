@@ -284,26 +284,57 @@
                     : "none";
             }
 
+            function loadScormSCO(uuid, registration, retry = true) {
+                fetch(`/api/scorm/show/${uuid}`)
+                        .then((res) => res.json())
+                        .then(async(res) => {
+                            const zipUrl = res.data.entry_url_zip;
+                            // 4. check if zip file exists
+                            const exists = await fetch(zipUrl, { method: "HEAD" })
+                            if (exists.ok) {
+                                // 4a. send zip url to service worker
+                                registration.active.postMessage(zipUrl);
+                            } else {
+                                console.log("zip file not exists");
+                                const exists = await fetch(`/api/scorm/zip/${uuid}`)
+                                if (exists.ok) {
+                                    console.log("zip file created");
+                                    retry && loadScormSCO(uuid, registration, false);
+                                }
+
+                                // 4b. create zip file
+                            }
+
+
+                            console.log("res", res);
+                        });
+            }
+
             function init() {
+                // 1. show loading
                 loading();
-                // prettier-ignore
+                // 2. register service worker
                 register("/api/scorm/service-worker").then((reg) => {
                     navigator.serviceWorker.ready.then((registration) => {
                         //console.log("ready", registration);
-                        loading(false);
-                    });
-                }).then(() => {
-                    navigator.serviceWorker.ready.then((registration) => {
-                        registration.active.postMessage("{{ $data['entry_url_zip'] }}");
+                        //loading(false);
+                        loadScormSCO("{{$data['uuid']}}", registration);
+                        //registration.active.postMessage("{{ $data['entry_url_zip'] }}");
                         loading(true);
-                     });
-                });
+                    });
+                })
+
             }
 
             init();
         </script>
         <div id="scos"></div>
         <div id="iframe_el"></div>
+        <pre>
+            @php
+                print_r($data['uuid']);
+            @endphp
+        </pre>
         <!-- <iframe src={{ $data['entry_url_absolute'] }}></iframe> -->
     </body>
 </html>

@@ -38,7 +38,6 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("message", async (e) => {
-    console.log("message", e.data);
     const url = e.data;
     const urlTrimmed = url.replace(/([^\w ]|_)/g, "");
     const request = await fetch(url);
@@ -74,12 +73,9 @@ self.addEventListener("message", async (e) => {
 
 // Fetching content using Service Worker
 self.addEventListener("fetch", async (e) => {
-    console.log("fetch", e.request.url, e.request.url.includes(FOLDER_PREFIX));
     if (e.request.url.includes(FOLDER_PREFIX)) {
         const id = e.request.url.split(FOLDER_PREFIX)[1].split("/").join("");
         const zip = resolvers[id];
-
-        console.log("zip", resolvers, id);
 
         // find zip ID
         if (zip) {

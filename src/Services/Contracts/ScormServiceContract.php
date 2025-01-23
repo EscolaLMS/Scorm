@@ -17,5 +17,4 @@ interface ScormServiceContract
     public function getScoByUuid($scoUuid): ScormScoModel;
     public function getScoViewDataByUuid(string $scoUuid, ?int $userId = null, ?string $token = null): ScormScoModel;
     public function zipScorm(int $id): string;
-    public function uploadServiceWorkerToBucket(): bool;
 }
