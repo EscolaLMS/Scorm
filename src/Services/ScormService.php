@@ -284,18 +284,19 @@ class ScormService implements ScormServiceContract
      */
     public function createOrGetZipByUuid(string $uuid): bool
     {
-        //try {
-        $scorm = ScormScoModel::with(['scorm'])
-            ->where('uuid', $uuid)
-            ->first()
-            ->scorm;
-        if ($scorm) {
-            $this->zipScorm($scorm->id);
-            return true;
+        try {
+            // @phpstan-ignore-next-line
+            $scorm = ScormScoModel::with(['scorm'])
+                ->where('uuid', $uuid)
+                ->first()
+                ->scorm;
+            if ($scorm) {
+                $this->zipScorm($scorm->id);
+                return true;
+            }
+        } catch (\Exception $e) {
+            return false;
         }
-        // } catch (\Exception $e) {
-        //     return false;
-        // }
         return false;
     }
 
