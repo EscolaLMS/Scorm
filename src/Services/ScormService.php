@@ -277,6 +277,30 @@ class ScormService implements ScormServiceContract
     }
 
     /**
+     * Create zip file for scorm if not exists,
+     * Legacy method for service worker 
+     * @param string $uuid
+     * @return bool
+     */
+    public function createOrGetZipByUuid(string $uuid): bool
+    {
+        try {
+            // @phpstan-ignore-next-line
+            $scorm = ScormScoModel::with(['scorm'])
+                ->where('uuid', $uuid)
+                ->first()
+                ->scorm;
+            if ($scorm) {
+                $this->zipScorm($scorm->id);
+                return true;
+            }
+        } catch (\Exception $e) {
+            return false;
+        }
+        return false;
+    }
+
+    /**
      * Get SCO list
      * @param $scormId
      * @return Builder[]|Collection
@@ -321,7 +345,7 @@ class ScormService implements ScormServiceContract
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
         $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
 
-        if (Storage::disk('local')->exists($scormFilePath)) {
+        if (Storage::disk((config('scorm.disk')))->exists($scormFilePath)) {
             return $scormFilePath;
         }
 
@@ -344,32 +368,49 @@ class ScormService implements ScormServiceContract
 
     public function zipScormFiles(ScormModel $scorm): string
     {
+        $isLocal = config('scorm.disk') === 'local';
         $scormDisk = Storage::disk(config('scorm.disk'));
+        $scormLocal = Storage::disk('local');
         $scormPath = 'scorm' . DIRECTORY_SEPARATOR . $scorm->version . DIRECTORY_SEPARATOR . $scorm->hash_name;
         $scormFilePath = $scormPath . DIRECTORY_SEPARATOR . $scorm->hash_name . '.zip';
         $files = array_filter($scormDisk->allFiles($scormPath), fn($item) => $item !== $scormFilePath);
 
-        if (!Storage::disk('local')->exists('scorm/exports')) {
-            Storage::disk('local')->makeDirectory('scorm/exports');
+        if (!Storage::disk(config('scorm.disk'))->exists('scorm/exports')) {
+            Storage::disk(config('scorm.disk'))->makeDirectory('scorm/exports');
         }
 
         $zip = new \ZipArchive();
         $zipFilePath = 'scorm/exports/' . uniqid(rand(), true) . $scorm->hash_name . '.zip';
+        // zip file must be in local disk always
         $zipFile = Storage::disk('local')->path($zipFilePath);
 
         if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
             throw new \Exception("Zip file could not be created: " . $zip->getStatusString());
         }
 
+
         foreach ($files as $file) {
             $prefix = 'scorm/' . $scorm->version . DIRECTORY_SEPARATOR . $scorm->uuid . DIRECTORY_SEPARATOR;
+
+            // crazy bug 
+            $file = $file[0] == 's' ? $file : 's' . $file;
             $dir = str_replace($prefix, "", $file);
-            if (!$zip->addFile($scormDisk->path($file), $dir)) {
+
+            $localFile = $scormLocal->put($file, $scormDisk->get($file));
+
+            if (!$zip->addFile($scormLocal->path($file), $dir)) {
                 throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
             }
         }
 
         $zip->close();
+
+        if (!$isLocal) {
+            Storage::disk(config('scorm.disk'))->put($zipFilePath, file_get_contents($zipFile));
+            if (!Storage::disk(config('scorm.disk'))->exists($scormFilePath)) {
+                Storage::disk(config('scorm.disk'))->copy($zipFilePath, $scormFilePath);
+            }
+        }
 
         return $zipFilePath;
     }

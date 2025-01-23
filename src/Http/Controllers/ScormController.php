@@ -122,4 +122,13 @@ class ScormController extends EscolaLmsBaseController implements ScormController
 
         return $this->sendSuccess('Scorm Package deleted successfully');
     }
+
+    public function createOrGetZip(string $uuid, Request $request): JsonResponse
+    {
+        $data = $this->scormService->createOrGetZipByUuid(
+            $uuid,
+        );
+
+        return $this->sendResponse($data, 'Scorm object fetched successfully');
+    }
 }
